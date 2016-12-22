@@ -73,20 +73,20 @@ command:
 
 expr:
 	value
-	| value '+' value { printf("[BISON]ADD\n"); }
-	| value SUB value
-	| value MULT value
-	| value DIV value
-	| value MOD value
+	| value '+' value  { printf("[BISON]ADD\n");    }
+	| value '-' value  { printf("[BISON]SUB\n");    }
+	| value '*' value  { printf("[BISON]MULTI\n");  }
+	| value '/' value  { printf("[BISON]DIV\n");    }
+	| value '%' value  { printf("[BISON]MOD\n");    }
 ;
 
 cond:
-	value EQ value
-	| value NE value
-	| value LT value
-	| value GT value
-	| value LE value
-	| value GE value
+	value "==" value       { printf("[BISON]EQUAL\n");   }// czy na pewno ten znak?
+	| value "!="  value    { printf("[BISON]NE\n");      }
+	| value "<" value      { printf("[BISON]LT\n");      }
+	| value ">" value      { printf("[BISON]GT\n");      }
+	| value "<=" value     { printf("[BISON]LE\n");      }
+	| value "=>" value     { printf("[BISON]GE\n");      }
 ;
 
 value:

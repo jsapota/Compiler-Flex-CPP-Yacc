@@ -52,23 +52,35 @@ WHITE_C 				[ \t]
 
 \n						{ printf("[LEX]NEW LINE\t Lines: %d\n", ++lines); }
 
-\;						{ YY_LEX(SEMICOLON); }
+\;						{   YY_PRINT("[LEX]\t%s\n", ";");
+                          return ';'; }
 
 \+						{   YY_PRINT("[LEX]\t%s\n", "+");
                           return '+'; }
-\-						{ YY_LEX(SUB); }
-\/						{ YY_LEX(DIV); }
-\%						{ YY_LEX(MOD); }
-\*						{ YY_LEX(MULT); }
+\-						{   YY_PRINT("[LEX]\t%s\n", "-");
+                          return '-'; }
+\/						{   YY_PRINT("[LEX]\t%s\n", "/");
+                          return '/'; }
+\%						{   YY_PRINT("[LEX]\t%s\n", "%");
+                          return '%'; }
+\*						{   YY_PRINT("[LEX]\t%s\n", "*");
+                          return '*'; }
 
-\:\=					{ YY_LEX(ASSIGN); }
+\:\=					{   YY_PRINT("[LEX]\t%s\n", ":=");
+                          return ':'+'='; }
 
-\=						{ YY_LEX(EQ); }
-\<\>					{ YY_LEX(NE); }
-\<						{ YY_LEX(LT); }
-\>						{ YY_LEX(GT); }
-\<\=					{ YY_LEX(LE); }
-\>\=					{ YY_LEX(GE); }
+\=						{   YY_PRINT("[LEX]\t%s\n", "=");
+                          return '='; }
+\<\>					{   YY_PRINT("[LEX]\t%s\n", "<>");
+                          return '<'+'>'; }
+\<						{   YY_PRINT("[LEX]\t%s\n", "<");
+                          return '<'; }
+\>						{   YY_PRINT("[LEX]\t%s\n", ">");
+                          return '>'; }
+\<\=					{   YY_PRINT("[LEX]\t%s\n", "<=");
+                          return '<'+'='; }
+\>\=					{   YY_PRINT("[LEX]\t%s\n", ">=");
+                          return '>'+'='; }
 
 
 VAR						{ YY_LEX(VAR); }

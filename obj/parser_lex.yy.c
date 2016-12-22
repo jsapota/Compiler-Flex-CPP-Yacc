@@ -885,190 +885,202 @@ YY_RULE_SETUP
 case 8:
 YY_RULE_SETUP
 #line 55 "./src/parser.l"
-{ YY_LEX(SEMICOLON); }
+{   YY_PRINT("[LEX]\t%s\n", ";");
+                          return ';'; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 57 "./src/parser.l"
+#line 58 "./src/parser.l"
 {   YY_PRINT("[LEX]\t%s\n", "+");
                           return '+'; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 59 "./src/parser.l"
-{ YY_LEX(SUB); }
+#line 60 "./src/parser.l"
+{   YY_PRINT("[LEX]\t%s\n", "-");
+                          return '-'; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 60 "./src/parser.l"
-{ YY_LEX(DIV); }
+#line 62 "./src/parser.l"
+{   YY_PRINT("[LEX]\t%s\n", "/");
+                          return '/'; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 61 "./src/parser.l"
-{ YY_LEX(MOD); }
+#line 64 "./src/parser.l"
+{   YY_PRINT("[LEX]\t%s\n", "%");
+                          return '%'; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 62 "./src/parser.l"
-{ YY_LEX(MULT); }
+#line 66 "./src/parser.l"
+{   YY_PRINT("[LEX]\t%s\n", "*");
+                          return '*'; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 64 "./src/parser.l"
-{ YY_LEX(ASSIGN); }
+#line 69 "./src/parser.l"
+{   YY_PRINT("[LEX]\t%s\n", ":=");
+                          return ':'+'='; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 66 "./src/parser.l"
-{ YY_LEX(EQ); }
+#line 72 "./src/parser.l"
+{   YY_PRINT("[LEX]\t%s\n", "=");
+                          return '='; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 67 "./src/parser.l"
-{ YY_LEX(NE); }
+#line 74 "./src/parser.l"
+{   YY_PRINT("[LEX]\t%s\n", "<>");
+                          return '<'+'>'; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 68 "./src/parser.l"
-{ YY_LEX(LT); }
+#line 76 "./src/parser.l"
+{   YY_PRINT("[LEX]\t%s\n", "<");
+                          return '<'; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 69 "./src/parser.l"
-{ YY_LEX(GT); }
+#line 78 "./src/parser.l"
+{   YY_PRINT("[LEX]\t%s\n", ">");
+                          return '>'; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 70 "./src/parser.l"
-{ YY_LEX(LE); }
+#line 80 "./src/parser.l"
+{   YY_PRINT("[LEX]\t%s\n", "<=");
+                          return '<'+'='; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 71 "./src/parser.l"
-{ YY_LEX(GE); }
+#line 82 "./src/parser.l"
+{   YY_PRINT("[LEX]\t%s\n", ">=");
+                          return '>'+'='; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 74 "./src/parser.l"
+#line 86 "./src/parser.l"
 { YY_LEX(VAR); }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 77 "./src/parser.l"
+#line 89 "./src/parser.l"
 { YY_LEX(_BEGIN); }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 78 "./src/parser.l"
+#line 90 "./src/parser.l"
 { YY_LEX(END); }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 81 "./src/parser.l"
+#line 93 "./src/parser.l"
 { YY_LEX(READ); }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 82 "./src/parser.l"
+#line 94 "./src/parser.l"
 { YY_LEX(WRITE); }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 85 "./src/parser.l"
+#line 97 "./src/parser.l"
 { YY_LEX(SKIP); }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 88 "./src/parser.l"
+#line 100 "./src/parser.l"
 { YY_LEX(FOR); }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 89 "./src/parser.l"
+#line 101 "./src/parser.l"
 { YY_LEX(FROM); }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 90 "./src/parser.l"
+#line 102 "./src/parser.l"
 { YY_LEX(TO); }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 91 "./src/parser.l"
+#line 103 "./src/parser.l"
 { YY_LEX(DOWNTO); }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 92 "./src/parser.l"
+#line 104 "./src/parser.l"
 { YY_LEX(ENDFOR); }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 95 "./src/parser.l"
+#line 107 "./src/parser.l"
 { YY_LEX(WHILE); }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 96 "./src/parser.l"
+#line 108 "./src/parser.l"
 { YY_LEX(DO); }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 97 "./src/parser.l"
+#line 109 "./src/parser.l"
 { YY_LEX(ENDWHILE); }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 100 "./src/parser.l"
+#line 112 "./src/parser.l"
 { YY_LEX(IF); }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 101 "./src/parser.l"
+#line 113 "./src/parser.l"
 { YY_LEX(THEN); }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 102 "./src/parser.l"
+#line 114 "./src/parser.l"
 { YY_LEX(ELSE); }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 103 "./src/parser.l"
+#line 115 "./src/parser.l"
 { YY_LEX(ENDIF); }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 105 "./src/parser.l"
+#line 117 "./src/parser.l"
 { YY_LEX(L_BRACKET); }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 106 "./src/parser.l"
+#line 118 "./src/parser.l"
 { YY_LEX(R_BRACKET); }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 109 "./src/parser.l"
+#line 121 "./src/parser.l"
 { YY_LEX(VARIABLE); }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 111 "./src/parser.l"
+#line 123 "./src/parser.l"
 { YY_LEX(NUM); }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 113 "./src/parser.l"
+#line 125 "./src/parser.l"
 { YY_LEX(ERROR); }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 115 "./src/parser.l"
+#line 127 "./src/parser.l"
 ECHO;
 	YY_BREAK
-#line 1072 "obj/parser_lex.yy.c"
+#line 1084 "obj/parser_lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(COMMENT):
 	yyterminate();
@@ -2073,7 +2085,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 115 "./src/parser.l"
+#line 127 "./src/parser.l"
 
 
 

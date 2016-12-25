@@ -8,21 +8,7 @@
 
 int lines = 1;
 
-#ifdef DEBUG_MODE
-    #define YY_PRINT(fmt, ...) \
-        printf(fmt, ##__VA_ARGS__);
-#else
-    #define YY_PRINT(fmt, ...)
-#endif
-
-#define YY_LEX(__token) \
-    do{ \
-        YY_PRINT("[LEX]\t%s\n", #__token); \
-        if( asprintf(&yylval.token.str, "%s", yytext) == -1) \
-            printf("asprintf error\n"); \
-        yylval.token.line = lines; \
-        return __token; \
-    }while(0)
+static inline int yy_lex(int token);
 
 %}
 
@@ -34,97 +20,91 @@ WHITE_C 				[ \t]
 
 %%
 
-\n						{ printf("[LEX]NEW LINE\t Lines: %d\n", ++lines); }
+\n						{++lines; }
 \{               		{
-							printf("[LEX]\tBEGIN COMMENT\n");
 							BEGIN(COMMENT);
 						}
 
 <COMMENT>\}      		{
-							printf("[LEX]\tEND COMMENT\n");
 							BEGIN(INITIAL);
 						}
 
-<COMMENT>[^\\{]|[^\}]	{ printf("[LEX]\tCOMMENT\t%s\n",yytext); }
+<COMMENT>[^\\{]|[^\}]	{ }
 
 {WHITE_C}+
-^{WHITE_C}*\n			{ printf("[LEX]NEW LINE\t Lines: %d\n", ++lines); }
+^{WHITE_C}*\n			{ ++lines; }
 
-\n						{ printf("[LEX]NEW LINE\t Lines: %d\n", ++lines); }
+\n						{ ++lines; }
 
-\;						{   YY_PRINT("[LEX]\t%s\n", ";");
-                          return ';'; }
+\;						{   return yy_lex((int)';'); }
 
-\+						{   YY_PRINT("[LEX]\t%s\n", "+");
-                          return '+'; }
-\-						{   YY_PRINT("[LEX]\t%s\n", "-");
-                          return '-'; }
-\/						{   YY_PRINT("[LEX]\t%s\n", "/");
-                          return '/'; }
-\%						{   YY_PRINT("[LEX]\t%s\n", "%");
-                          return '%'; }
-\*						{   YY_PRINT("[LEX]\t%s\n", "*");
-                          return '*'; }
+\+						{   return yy_lex((int)'+'); }
+\-						{   return yy_lex((int)'-'); }
+\/						{   return yy_lex((int)'/'); }
+\%						{  return yy_lex((int)'%'); }
+\*						{ return yy_lex((int)'*'); }
 
-\:\=					{   YY_PRINT("[LEX]\t%s\n", ":=");
-                          return ':'+'='; }
+\:\=					{   return yy_lex((int)ASSIGN); }
 
-\=						{   YY_PRINT("[LEX]\t%s\n", "=");
-                          return '='; }
-\<\>					{   YY_PRINT("[LEX]\t%s\n", "<>");
-                          return '<'+'>'; }
-\<						{   YY_PRINT("[LEX]\t%s\n", "<");
-                          return '<'; }
-\>						{   YY_PRINT("[LEX]\t%s\n", ">");
-                          return '>'; }
-\<\=					{   YY_PRINT("[LEX]\t%s\n", "<=");
-                          return '<'+'='; }
-\>\=					{   YY_PRINT("[LEX]\t%s\n", ">=");
-                          return '>'+'='; }
+\=						{   return yy_lex((int)'='); }
+\<\>					{  return yy_lex((int)NE); }
+\<						{   return yy_lex((int)'<'); }
+\>						{   return yy_lex((int)'>'); }
+\<\=					{   return yy_lex((int)GE); }
+\>\=					{  return yy_lex((int)LE); }
 
 
-VAR						{ YY_LEX(VAR); }
+VAR						{ return yy_lex(VAR); }
 
 
-"BEGIN"					{ YY_LEX(_BEGIN); }
-END						{ YY_LEX(END); }
+"BEGIN"					{ return yy_lex(_BEGIN); }
+END						{ return yy_lex(END); }
 
 
-READ					{ YY_LEX(READ); }
-WRITE					{ YY_LEX(WRITE); }
+READ					{ return yy_lex(READ); }
+WRITE					{ return yy_lex(WRITE); }
 
 
-SKIP					{ YY_LEX(SKIP); }
+SKIP					{ return yy_lex(SKIP); }
 
 
-FOR						{ YY_LEX(FOR); }
-FROM					{ YY_LEX(FROM); }
-TO						{ YY_LEX(TO); }
-DOWNTO					{ YY_LEX(DOWNTO); }
-ENDFOR					{ YY_LEX(ENDFOR); }
+FOR						{ return yy_lex(FOR); }
+FROM					{ return yy_lex(FROM); }
+TO						{return yy_lex(TO); }
+DOWNTO					{ return yy_lex(DOWNTO); }
+ENDFOR					{ return yy_lex(ENDFOR); }
 
 
-WHILE					{ YY_LEX(WHILE); }
-DO						{ YY_LEX(DO); }
-ENDWHILE				{ YY_LEX(ENDWHILE); }
+WHILE					{ return yy_lex(WHILE); }
+DO						{ return yy_lex(DO); }
+ENDWHILE				{return  yy_lex(ENDWHILE); }
 
 
-IF						{ YY_LEX(IF); }
-THEN					{ YY_LEX(THEN); }
-ELSE					{ YY_LEX(ELSE); }
-ENDIF					{ YY_LEX(ENDIF); }
+IF						{return  yy_lex(IF); }
+THEN					{ return yy_lex(THEN); }
+ELSE					{ return yy_lex(ELSE); }
+ENDIF					{ return yy_lex(ENDIF); }
 
-\[						{ YY_LEX(L_BRACKET); }
-\]						{ YY_LEX(R_BRACKET); }
+\[						{   return yy_lex((int)'['); }
+\]						{   return yy_lex((int)']'); }
 
 
-[_a-z]+					{ YY_LEX(VARIABLE); }
+[_a-z]+					{ return yy_lex(VARIABLE); }
 
-[0-9]+					{ YY_LEX(NUM); }
+[0-9]+					{ return yy_lex(NUM); }
 
-.						{ YY_LEX(ERROR); }
+.						{ return yy_lex(ERROR); }
 
 %%
+
+static inline int yy_lex(int token)
+{
+    if( asprintf(&yylval.token.str, "%s", yytext) == -1)
+        printf("asprintf error\n");
+
+    yylval.token.line = lines;
+    return token;
+}
 
 int yywrap(void)
 {

@@ -8,13 +8,4 @@
 #include <cstring> /* SSE */
 #include <string> /* string */
 
-
-#define SWAP(a, b) \
-    do{ \
-        typeof(a) __temp = b; \
-        a = b; \
-        b = __temp; \
-    }while(0)
-
-
 #endif

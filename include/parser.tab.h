@@ -42,54 +42,66 @@ extern int yydebug;
 /* "%code requires" blocks.  */
 #line 13 "./src/parser.y" /* yacc.c:1909  */
 
+    #include <string.h>
+    #include <map>
+
     typedef struct yytoken
     {
         char *str;
         int line;
     }yytoken;
 
-#line 52 "./include/parser.tab.h" /* yacc.c:1909  */
+    typedef struct Variable
+    {
+        std :: string name;
+
+        int reg;
+        int addr;
+        int len;
+
+        bool upToDate;
+        bool array;
+        bool init;
+        bool iter;
+
+        uint64_t val;
+
+    }Variable;
+
+    static std :: map<std :: string, Variable> variables;
+
+#line 74 "./include/parser.tab.h" /* yacc.c:1909  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
   enum yytokentype
   {
-    DIV = 258,
-    MOD = 259,
-    MULT = 260,
-    ASSIGN = 261,
-    SUB = 262,
-    EQ = 263,
-    NE = 264,
-    LT = 265,
-    GT = 266,
-    LE = 267,
-    GE = 268,
-    VAR = 269,
-    _BEGIN = 270,
-    END = 271,
-    READ = 272,
-    WRITE = 273,
-    SKIP = 274,
-    FOR = 275,
-    FROM = 276,
-    TO = 277,
-    DOWNTO = 278,
-    ENDFOR = 279,
-    WHILE = 280,
-    DO = 281,
-    ENDWHILE = 282,
-    IF = 283,
-    THEN = 284,
-    ELSE = 285,
-    ENDIF = 286,
-    L_BRACKET = 287,
-    R_BRACKET = 288,
-    VARIABLE = 289,
-    NUM = 290,
-    ERROR = 291,
-    SEMICOLON = 292
+    ASSIGN = 258,
+    NE = 259,
+    LE = 260,
+    GE = 261,
+    VAR = 262,
+    _BEGIN = 263,
+    END = 264,
+    READ = 265,
+    WRITE = 266,
+    SKIP = 267,
+    FOR = 268,
+    FROM = 269,
+    TO = 270,
+    DOWNTO = 271,
+    ENDFOR = 272,
+    WHILE = 273,
+    DO = 274,
+    ENDWHILE = 275,
+    IF = 276,
+    THEN = 277,
+    ELSE = 278,
+    ENDIF = 279,
+    VARIABLE = 280,
+    NUM = 281,
+    ERROR = 282
   };
 #endif
 
@@ -98,11 +110,12 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 23 "./src/parser.y" /* yacc.c:1909  */
+#line 45 "./src/parser.y" /* yacc.c:1909  */
 
     yytoken token;
+    Variable *var;
 
-#line 106 "./include/parser.tab.h" /* yacc.c:1909  */
+#line 119 "./include/parser.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

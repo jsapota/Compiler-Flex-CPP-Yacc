@@ -537,24 +537,10 @@ char *yytext;
 
 int lines = 1;
 
-#ifdef DEBUG_MODE
-    #define YY_PRINT(fmt, ...) \
-        printf(fmt, ##__VA_ARGS__);
-#else
-    #define YY_PRINT(fmt, ...)
-#endif
-
-#define YY_LEX(__token) \
-    do{ \
-        YY_PRINT("[LEX]\t%s\n", #__token); \
-        if( asprintf(&yylval.token.str, "%s", yytext) == -1) \
-            printf("asprintf error\n"); \
-        yylval.token.line = lines; \
-        return __token; \
-    }while(0)
+static inline int yy_lex(int token);
 
 
-#line 558 "obj/parser_lex.yy.c"
+#line 544 "obj/parser_lex.yy.c"
 
 #define INITIAL 0
 #define COMMENT 1
@@ -776,10 +762,10 @@ YY_DECL
 		}
 
 	{
-#line 35 "./src/parser.l"
+#line 21 "./src/parser.l"
 
 
-#line 783 "obj/parser_lex.yy.c"
+#line 769 "obj/parser_lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -840,247 +826,232 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 37 "./src/parser.l"
-{ printf("[LEX]NEW LINE\t Lines: %d\n", ++lines); }
+#line 23 "./src/parser.l"
+{++lines; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 38 "./src/parser.l"
+#line 24 "./src/parser.l"
 {
-							printf("[LEX]\tBEGIN COMMENT\n");
 							BEGIN(COMMENT);
 						}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 43 "./src/parser.l"
+#line 28 "./src/parser.l"
 {
-							printf("[LEX]\tEND COMMENT\n");
 							BEGIN(INITIAL);
 						}
 	YY_BREAK
 case 4:
 /* rule 4 can match eol */
 YY_RULE_SETUP
-#line 48 "./src/parser.l"
-{ printf("[LEX]\tCOMMENT\t%s\n",yytext); }
+#line 32 "./src/parser.l"
+{ }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 50 "./src/parser.l"
+#line 34 "./src/parser.l"
 
 	YY_BREAK
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
-#line 51 "./src/parser.l"
-{ printf("[LEX]NEW LINE\t Lines: %d\n", ++lines); }
+#line 35 "./src/parser.l"
+{ ++lines; }
 	YY_BREAK
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 53 "./src/parser.l"
-{ printf("[LEX]NEW LINE\t Lines: %d\n", ++lines); }
+#line 37 "./src/parser.l"
+{ ++lines; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 55 "./src/parser.l"
-{   YY_PRINT("[LEX]\t%s\n", ";");
-                          return ';'; }
+#line 39 "./src/parser.l"
+{   return yy_lex((int)';'); }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 58 "./src/parser.l"
-{   YY_PRINT("[LEX]\t%s\n", "+");
-                          return '+'; }
+#line 41 "./src/parser.l"
+{   return yy_lex((int)'+'); }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 60 "./src/parser.l"
-{   YY_PRINT("[LEX]\t%s\n", "-");
-                          return '-'; }
+#line 42 "./src/parser.l"
+{   return yy_lex((int)'-'); }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 62 "./src/parser.l"
-{   YY_PRINT("[LEX]\t%s\n", "/");
-                          return '/'; }
+#line 43 "./src/parser.l"
+{   return yy_lex((int)'/'); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 64 "./src/parser.l"
-{   YY_PRINT("[LEX]\t%s\n", "%");
-                          return '%'; }
+#line 44 "./src/parser.l"
+{  return yy_lex((int)'%'); }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 66 "./src/parser.l"
-{   YY_PRINT("[LEX]\t%s\n", "*");
-                          return '*'; }
+#line 45 "./src/parser.l"
+{ return yy_lex((int)'*'); }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 69 "./src/parser.l"
-{   YY_PRINT("[LEX]\t%s\n", ":=");
-                          return ':'+'='; }
+#line 47 "./src/parser.l"
+{   return yy_lex((int)ASSIGN); }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 72 "./src/parser.l"
-{   YY_PRINT("[LEX]\t%s\n", "=");
-                          return '='; }
+#line 49 "./src/parser.l"
+{   return yy_lex((int)'='); }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 74 "./src/parser.l"
-{   YY_PRINT("[LEX]\t%s\n", "<>");
-                          return '<'+'>'; }
+#line 50 "./src/parser.l"
+{  return yy_lex((int)NE); }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 76 "./src/parser.l"
-{   YY_PRINT("[LEX]\t%s\n", "<");
-                          return '<'; }
+#line 51 "./src/parser.l"
+{   return yy_lex((int)'<'); }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 78 "./src/parser.l"
-{   YY_PRINT("[LEX]\t%s\n", ">");
-                          return '>'; }
+#line 52 "./src/parser.l"
+{   return yy_lex((int)'>'); }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 80 "./src/parser.l"
-{   YY_PRINT("[LEX]\t%s\n", "<=");
-                          return '<'+'='; }
+#line 53 "./src/parser.l"
+{   return yy_lex((int)GE); }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 82 "./src/parser.l"
-{   YY_PRINT("[LEX]\t%s\n", ">=");
-                          return '>'+'='; }
+#line 54 "./src/parser.l"
+{  return yy_lex((int)LE); }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 86 "./src/parser.l"
-{ YY_LEX(VAR); }
+#line 57 "./src/parser.l"
+{ return yy_lex(VAR); }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 89 "./src/parser.l"
-{ YY_LEX(_BEGIN); }
+#line 60 "./src/parser.l"
+{ return yy_lex(_BEGIN); }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 90 "./src/parser.l"
-{ YY_LEX(END); }
+#line 61 "./src/parser.l"
+{ return yy_lex(END); }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 93 "./src/parser.l"
-{ YY_LEX(READ); }
+#line 64 "./src/parser.l"
+{ return yy_lex(READ); }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 94 "./src/parser.l"
-{ YY_LEX(WRITE); }
+#line 65 "./src/parser.l"
+{ return yy_lex(WRITE); }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 97 "./src/parser.l"
-{ YY_LEX(SKIP); }
+#line 68 "./src/parser.l"
+{ return yy_lex(SKIP); }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 100 "./src/parser.l"
-{ YY_LEX(FOR); }
+#line 71 "./src/parser.l"
+{ return yy_lex(FOR); }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 101 "./src/parser.l"
-{ YY_LEX(FROM); }
+#line 72 "./src/parser.l"
+{ return yy_lex(FROM); }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 102 "./src/parser.l"
-{ YY_LEX(TO); }
+#line 73 "./src/parser.l"
+{return yy_lex(TO); }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 103 "./src/parser.l"
-{ YY_LEX(DOWNTO); }
+#line 74 "./src/parser.l"
+{ return yy_lex(DOWNTO); }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 104 "./src/parser.l"
-{ YY_LEX(ENDFOR); }
+#line 75 "./src/parser.l"
+{ return yy_lex(ENDFOR); }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 107 "./src/parser.l"
-{ YY_LEX(WHILE); }
+#line 78 "./src/parser.l"
+{ return yy_lex(WHILE); }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 108 "./src/parser.l"
-{ YY_LEX(DO); }
+#line 79 "./src/parser.l"
+{ return yy_lex(DO); }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 109 "./src/parser.l"
-{ YY_LEX(ENDWHILE); }
+#line 80 "./src/parser.l"
+{return  yy_lex(ENDWHILE); }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 112 "./src/parser.l"
-{ YY_LEX(IF); }
+#line 83 "./src/parser.l"
+{return  yy_lex(IF); }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 113 "./src/parser.l"
-{ YY_LEX(THEN); }
+#line 84 "./src/parser.l"
+{ return yy_lex(THEN); }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 114 "./src/parser.l"
-{ YY_LEX(ELSE); }
+#line 85 "./src/parser.l"
+{ return yy_lex(ELSE); }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 115 "./src/parser.l"
-{ YY_LEX(ENDIF); }
+#line 86 "./src/parser.l"
+{ return yy_lex(ENDIF); }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 117 "./src/parser.l"
-{ YY_LEX(L_BRACKET); }
+#line 88 "./src/parser.l"
+{   return yy_lex((int)'['); }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 118 "./src/parser.l"
-{ YY_LEX(R_BRACKET); }
+#line 89 "./src/parser.l"
+{   return yy_lex((int)']'); }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 121 "./src/parser.l"
-{ YY_LEX(VARIABLE); }
+#line 92 "./src/parser.l"
+{ return yy_lex(VARIABLE); }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 123 "./src/parser.l"
-{ YY_LEX(NUM); }
+#line 94 "./src/parser.l"
+{ return yy_lex(NUM); }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 125 "./src/parser.l"
-{ YY_LEX(ERROR); }
+#line 96 "./src/parser.l"
+{ return yy_lex(ERROR); }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 127 "./src/parser.l"
+#line 98 "./src/parser.l"
 ECHO;
 	YY_BREAK
-#line 1084 "obj/parser_lex.yy.c"
+#line 1055 "obj/parser_lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(COMMENT):
 	yyterminate();
@@ -2085,9 +2056,18 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 127 "./src/parser.l"
+#line 98 "./src/parser.l"
 
 
+
+static inline int yy_lex(int token)
+{
+    if( asprintf(&yylval.token.str, "%s", yytext) == -1)
+        printf("asprintf error\n");
+
+    yylval.token.line = lines;
+    return token;
+}
 
 int yywrap(void)
 {

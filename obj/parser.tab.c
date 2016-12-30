@@ -115,12 +115,14 @@ extern int yydebug;
 
     typedef struct Variable
     {
+
         std :: string name;
 
         int reg;
         int addr;
         int len;
 
+        bool isNum;
         bool upToDate;
         bool array;
         bool init;
@@ -128,11 +130,15 @@ extern int yydebug;
 
         uint64_t val;
 
+        uint64_t offset; /* t[1000] := a + b   offset = 1000 */
+        struct Variable *varOffset; /*  t[b] := a + c  varOffset = ptr --> b*/
+
     }Variable;
 
+    void inline variable_copy(Variable &dst, Variable const &src);
     static std :: map<std :: string, Variable> variables;
 
-#line 136 "./obj/parser.tab.c" /* yacc.c:355  */
+#line 142 "./obj/parser.tab.c" /* yacc.c:355  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -172,12 +178,12 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 45 "./src/parser.y" /* yacc.c:355  */
+#line 51 "./src/parser.y" /* yacc.c:355  */
 
     yytoken token;
     Variable *var;
 
-#line 181 "./obj/parser.tab.c" /* yacc.c:355  */
+#line 187 "./obj/parser.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -194,7 +200,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 198 "./obj/parser.tab.c" /* yacc.c:358  */
+#line 204 "./obj/parser.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -492,12 +498,12 @@ static const yytype_uint8 yytranslate[] =
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_uint16 yyrline[] =
 {
-       0,    68,    68,    69,    73,    74,   112,   156,   157,   161,
-     162,   163,   164,   165,   166,   167,   168,   172,   173,   174,
-     175,   176,   177,   181,   182,   183,   184,   185,   186,   190,
-     191,   195,   212,   238
+       0,    74,    74,    75,    79,    80,   113,   152,   153,   157,
+     163,   164,   165,   166,   167,   168,   169,   173,   174,   201,
+     202,   203,   204,   208,   217,   218,   219,   220,   221,   225,
+     232,   239,   259,   305
 };
 #endif
 
@@ -1338,7 +1344,7 @@ yyreduce:
   switch (yyn)
     {
         case 5:
-#line 75 "./src/parser.y" /* yacc.c:1646  */
+#line 81 "./src/parser.y" /* yacc.c:1646  */
     {
         auto it = variables.find(std :: string((yyvsp[0].token).str));
         if (it != variables.end())
@@ -1358,29 +1364,24 @@ yyreduce:
 
             val = 0;
         */
-
         Variable var;
-
         var.name = std :: string((yyvsp[0].token).str);
-
         var.reg = -1;
         var.addr = -1;
         var.len = 0;
-
+        var.isNum = false;
         var.array = false;
         var.init = false;
         var.upToDate = true;
         var.iter = false;
-
         var.val = 0;
-
         variables.insert ( std::pair<std :: string,Variable>(var.name,var) );
     }
-#line 1380 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1381 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 113 "./src/parser.y" /* yacc.c:1646  */
+#line 114 "./src/parser.y" /* yacc.c:1646  */
     {
         auto it = variables.find(std :: string((yyvsp[-3].token).str));
         if (it != variables.end())
@@ -1398,173 +1399,265 @@ yyreduce:
             upToDate = true;
             iter = false;
         */
-
         Variable var;
-
         var.name = std :: string((yyvsp[-3].token).str);
-
         var.reg = -1;
         var.addr = -1;
-        var.len = atoll((yyvsp[-2].token).str);
+        var.isNum = false;
+        var.len = atoll((yyvsp[-1].token).str);
         if(var.len == 0)
         {
             std :: cerr << "SIZE OF ARRAY CANT BE 0\t" << (yyvsp[-3].token).str << std :: endl;
             exit(1);
         }
-
         var.array = true;
         var.init = false;
         var.upToDate = true;
         var.iter = false;
-
         var.iter = false;
-
         variables.insert ( std::pair<std :: string,Variable>(var.name,var) );
     }
-#line 1425 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1421 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 18:
-#line 173 "./src/parser.y" /* yacc.c:1646  */
-    { printf("[BISON]ADD\n");    }
+  case 9:
+#line 158 "./src/parser.y" /* yacc.c:1646  */
+    {
+        /*
+        id = R1
+        */
+    }
 #line 1431 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 19:
+  case 18:
 #line 174 "./src/parser.y" /* yacc.c:1646  */
+    {
+
+                        printf("[BISON]ADD\n");
+                        std :: cout << (yyvsp[-2].var)->name << " + " << (yyvsp[0].var)->name << std :: endl;
+
+
+                        if(!(yyvsp[-2].var)->isNum){
+                        auto it = variables[(yyvsp[-2].var)->name];
+                        if (!it.init)
+                            {
+                                std :: cerr << "VARIABLE NOT INITIALIZED\t" << (yyvsp[-2].var)->name << std :: endl;
+                                exit(1);
+                            }
+                        }
+                        if(!(yyvsp[0].var)->isNum){
+                            auto it = variables[(yyvsp[0].var)->name];
+                            if (!it.init)
+                            {
+                                std :: cerr << "VARIABLE NOT INITIALIZED\t" << (yyvsp[0].var)->name << std :: endl;
+                                exit(1);
+                            }
+                        }
+                        /*
+                                check init na val1 i val2
+                                do zastanowenia sie
+                                konwencja ze res --> R1
+                        */}
+#line 1463 "./obj/parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 19:
+#line 201 "./src/parser.y" /* yacc.c:1646  */
     { printf("[BISON]SUB\n");    }
-#line 1437 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1469 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 175 "./src/parser.y" /* yacc.c:1646  */
+#line 202 "./src/parser.y" /* yacc.c:1646  */
     { printf("[BISON]MULTI\n");  }
-#line 1443 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1475 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 176 "./src/parser.y" /* yacc.c:1646  */
+#line 203 "./src/parser.y" /* yacc.c:1646  */
     { printf("[BISON]DIV\n");    }
-#line 1449 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1481 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 177 "./src/parser.y" /* yacc.c:1646  */
+#line 204 "./src/parser.y" /* yacc.c:1646  */
     { printf("[BISON]MOD\n");    }
-#line 1455 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1487 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 181 "./src/parser.y" /* yacc.c:1646  */
-    { printf("[BISON]EQUAL\n");   }
-#line 1461 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 208 "./src/parser.y" /* yacc.c:1646  */
+    { printf("[BISON]EQUAL\n");
+                /*
+                    Do wymyslenia: jak sie skapnac ze cos jest w relacji
+                    a == b ??
+                    SUB
+                    JZERO
+                    INC
+                */
+  }
+#line 1501 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 182 "./src/parser.y" /* yacc.c:1646  */
+#line 217 "./src/parser.y" /* yacc.c:1646  */
     { printf("[BISON]NE\n");      }
-#line 1467 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1507 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 183 "./src/parser.y" /* yacc.c:1646  */
+#line 218 "./src/parser.y" /* yacc.c:1646  */
     { printf("[BISON]LT\n");      }
-#line 1473 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1513 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 184 "./src/parser.y" /* yacc.c:1646  */
+#line 219 "./src/parser.y" /* yacc.c:1646  */
     { printf("[BISON]GT\n");      }
-#line 1479 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1519 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 185 "./src/parser.y" /* yacc.c:1646  */
+#line 220 "./src/parser.y" /* yacc.c:1646  */
     { printf("[BISON]LE\n");      }
-#line 1485 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1525 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 186 "./src/parser.y" /* yacc.c:1646  */
+#line 221 "./src/parser.y" /* yacc.c:1646  */
     { printf("[BISON]GE\n");      }
-#line 1491 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1531 "./obj/parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 29:
+#line 226 "./src/parser.y" /* yacc.c:1646  */
+    {
+        (yyval.var) = new Variable;
+        (yyval.var)->name = (yyvsp[0].token).str;
+        (yyval.var)->isNum = true;
+        (yyval.var)->val = atoll((yyvsp[0].token).str);
+    }
+#line 1542 "./obj/parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 30:
+#line 233 "./src/parser.y" /* yacc.c:1646  */
+    {
+        (yyval.var) = (yyvsp[0].var);
+    }
+#line 1550 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 196 "./src/parser.y" /* yacc.c:1646  */
+#line 240 "./src/parser.y" /* yacc.c:1646  */
     {
+        /* czy DECLARED  */
         auto it = variables.find(std :: string((yyvsp[0].token).str));
         if (it == variables.end())
         {
             std :: cerr << "NOT DECLARED\t" << (yyvsp[0].token).str << std :: endl;
             exit(1);
         }
+        /* czy ARRAY  */
         Variable var = variables[std  :: string((yyvsp[0].token).str)];
         if( var.array){
             std :: cerr << "VARIABLE IS ARRAY" << (yyvsp[0].token).str << std :: endl;
             exit(1);
         }
 
+        /* czy Propagacja  */
         (yyval.var) = new Variable;
-
+        variable_copy(*(yyval.var), var);
     }
-#line 1512 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1574 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 213 "./src/parser.y" /* yacc.c:1646  */
+#line 260 "./src/parser.y" /* yacc.c:1646  */
     {
+
+        /* czy DECLARED  */
         auto it = variables.find(std :: string((yyvsp[-3].token).str));
         if (it == variables.end())
         {
             std :: cerr << "NOT DECLARED\t" << (yyvsp[-3].token).str << std :: endl;
             exit(1);
         }
+        /* czy ARRAY  */
         Variable var = variables[std  :: string((yyvsp[-3].token).str)];
         if( !var.array){
             std :: cerr << "VARIABLE ISNT ARRAY" << (yyvsp[-3].token).str << std :: endl;
             exit(1);
         }
 
+        /* czy DECLARED  */
         it = variables.find(std :: string((yyvsp[-1].token).str));
         if (it == variables.end())
         {
             std :: cerr << "NOT DECLARED\t" << (yyvsp[-1].token).str << std :: endl;
             exit(1);
         }
+
+        /* czy NIE ARRAY  */
         var = variables[std  :: string((yyvsp[-1].token).str)];
-        if( !var.array){
-            std :: cerr << "VARIABLE ISNT ARRAY" << (yyvsp[-1].token).str << std :: endl;
+        if( var.array){
+            std :: cerr << "VARIABLE CANT BE ARRAY" << (yyvsp[-1].token).str << std :: endl;
             exit(1);
         }
+
+
+        var = variables[std  :: string((yyvsp[-3].token).str)];
+        Variable var2 = variables[std  :: string((yyvsp[-1].token).str)];
+
+
+        /* czy Propagacja  */
+        Variable *varptr1 = new Variable;
+        variable_copy(*varptr1, var);
+        Variable *varptr2 = new Variable;
+        variable_copy(*varptr2, var2);
+        varptr1->varOffset = varptr2;
+        (yyval.var) = new Variable;
+        variable_copy(*(yyval.var), *varptr1);
     }
-#line 1542 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1624 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 239 "./src/parser.y" /* yacc.c:1646  */
+#line 306 "./src/parser.y" /* yacc.c:1646  */
     {
+        /* czy DECLARED  */
         auto it = variables.find(std :: string((yyvsp[-3].token).str));
         if (it == variables.end())
         {
             std :: cerr << "NOT DECLARED\t" << (yyvsp[-3].token).str << std :: endl;
             exit(1);
         }
+
+        /* czy ARRAY  */
         Variable var = variables[std  :: string((yyvsp[-3].token).str)];
         if( !var.array){
             std :: cerr << "VARIABLE ISNT ARRAY\t" << (yyvsp[-3].token).str << std :: endl;
             exit(1);
         }
+            /* czy OUT OF RANGE  */
         if( var.len <= atoll((yyvsp[-1].token).str)){
             std :: cerr << "OUT OF RANGE\t" << (yyvsp[-3].token).str << std :: endl;
             exit(1);
         }
+
+            /* Propagacja  */
+        (yyval.var) = new Variable;
+        variable_copy(*(yyval.var), var);
+        (yyval.var)->varOffset = NULL;
+        (yyval.var)->offset = atoll((yyvsp[-1].token).str);
+
     }
-#line 1564 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1657 "./obj/parser.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1568 "./obj/parser.tab.c" /* yacc.c:1646  */
+#line 1661 "./obj/parser.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1792,10 +1885,26 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 258 "./src/parser.y" /* yacc.c:1906  */
+#line 336 "./src/parser.y" /* yacc.c:1906  */
 
 void yyerror(const char *msg)
 {
     printf("ERROR!!!\t%s\t%s\nLINE\t%d\n",msg,yylval.token.str, yylval.token.line);
     exit(1);
+}
+
+inline void variable_copy(Variable &dst, Variable const &src)
+{
+        dst.name = src.name;
+        dst.reg = src.reg;
+        dst.addr = src.addr;
+        dst.len = src.len;
+        dst.isNum = src.isNum;
+        dst.upToDate = src.upToDate;
+        dst.array = src.array;
+        dst.init = src.init;
+        dst.iter = src.iter;
+        dst.val = src.val;
+        dst.offset = src.offset;
+        dst.varOffset = src.varOffset;
 }

@@ -53,12 +53,14 @@ extern int yydebug;
 
     typedef struct Variable
     {
+
         std :: string name;
 
         int reg;
         int addr;
         int len;
 
+        bool isNum;
         bool upToDate;
         bool array;
         bool init;
@@ -66,11 +68,15 @@ extern int yydebug;
 
         uint64_t val;
 
+        uint64_t offset; /* t[1000] := a + b   offset = 1000 */
+        struct Variable *varOffset; /*  t[b] := a + c  varOffset = ptr --> b*/
+
     }Variable;
 
+    void inline variable_copy(Variable &dst, Variable const &src);
     static std :: map<std :: string, Variable> variables;
 
-#line 74 "./include/parser.tab.h" /* yacc.c:1909  */
+#line 80 "./include/parser.tab.h" /* yacc.c:1909  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -110,12 +116,12 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 45 "./src/parser.y" /* yacc.c:1909  */
+#line 51 "./src/parser.y" /* yacc.c:1909  */
 
     yytoken token;
     Variable *var;
 
-#line 119 "./include/parser.tab.h" /* yacc.c:1909  */
+#line 125 "./include/parser.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

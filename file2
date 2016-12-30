@@ -1,0 +1,17 @@
+VAR
+a b c d
+
+BEGIN
+
+a := 10;
+b := 20;
+c := a;
+d := 10000;
+
+
+WRITE a;
+WRITE b;
+WRITE c;
+WRITE d;
+
+END

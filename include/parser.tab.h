@@ -40,7 +40,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 13 "./src/parser.y" /* yacc.c:1909  */
+#line 16 "./src/parser.y" /* yacc.c:1909  */
 
     #include <string.h>
     #include <map>
@@ -116,7 +116,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 51 "./src/parser.y" /* yacc.c:1909  */
+#line 54 "./src/parser.y" /* yacc.c:1909  */
 
     yytoken token;
     Variable *var;

@@ -1,0 +1,10 @@
+VAR
+
+a 
+
+BEGIN
+
+a := 1234567890;
+WRITE a;
+
+END

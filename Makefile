@@ -15,6 +15,7 @@ DEPS = $(wildcard $(IDIR)/*.h)
 all: compiler
 compiler: $(EXEC)
 
+
 # Create YACC files
 $(ODIR)/parser.tab.c $(IDIR)/parser.tab.h: $(SDIR)/parser.y
 	$(YACC) --defines=$(IDIR)/parser.tab.h $(SDIR)/parser.y -o $(ODIR)/parser.tab.c

@@ -4,8 +4,8 @@ int yyparse(void);
 
 int main(int argc, char **argv)
 {
-
-    yyparse();
+    if( yyparse() )
+        return 1;
 
     return 0;
 }

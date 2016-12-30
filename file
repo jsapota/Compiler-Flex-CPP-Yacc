@@ -1,8 +1,0 @@
-VAR
-a b c
-
-BEGIN
-
-a := b + c;
-
-END

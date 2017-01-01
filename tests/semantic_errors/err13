@@ -1,0 +1,17 @@
+{
+    ERROR!
+    wrong use, var is an array:     a
+    LINE: 13         FOR i FROM a TO a[1] DO
+}
+
+VAR
+
+a[2]
+
+BEGIN
+
+FOR i FROM a TO a[1] DO
+    a := a + 10;
+ENDFOR
+
+END

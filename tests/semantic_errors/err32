@@ -1,0 +1,15 @@
+{
+    ERROR!
+    array with size 0:      a
+    LINE: 9         a[0]
+}
+
+VAR
+
+a[0]
+
+BEGIN
+
+a[0] := 1;
+
+END

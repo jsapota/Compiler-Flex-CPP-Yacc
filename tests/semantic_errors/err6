@@ -1,0 +1,17 @@
+{
+    ERROR!
+    uninitialized variable: a
+    LINE: 14                    WRITE a;
+}
+
+VAR
+
+a b c
+
+BEGIN
+
+FOR i FROM 10 TO 1000 DO
+    WRITE a;
+ENDIF
+
+END

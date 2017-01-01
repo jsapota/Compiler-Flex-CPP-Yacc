@@ -1,0 +1,16 @@
+{
+    ERROR!
+    array member out of array range:        t[ 11 ]
+    LINE: 14         WRITE t[11];
+}
+
+VAR
+
+t[10]
+
+BEGIN
+
+READ t[0];
+WRITE t[11];
+
+END

@@ -1,0 +1,15 @@
+{
+    ERROR!
+    variable undeclared:  d
+    LINE: 13                a := d + 10000;
+}
+
+VAR
+
+a b c
+
+BEGIN
+
+a := d + 10000;
+
+END

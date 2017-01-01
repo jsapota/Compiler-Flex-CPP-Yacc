@@ -1,0 +1,17 @@
+{
+    ERROR!
+    uninitialized variable: a
+    LINE: 13                FOR i FROM a TO b DO
+}
+
+VAR
+
+a b c
+
+BEGIN
+
+FOR i FROM a TO b DO
+    a := a + i;
+ENDIF
+
+END

@@ -1,0 +1,15 @@
+{
+    ERROR!
+    wrong use, var is an array:     a
+    LINE: 13         READ a;
+}
+
+VAR
+
+a[2]
+
+BEGIN
+
+READ a;
+
+END

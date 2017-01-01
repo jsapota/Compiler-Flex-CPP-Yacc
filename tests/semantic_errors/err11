@@ -1,0 +1,19 @@
+{
+    ERROR!
+    wrong use, var is an array:     a
+    LINE: 13         IF a < 10 THEN
+}
+
+VAR
+
+a[2]
+
+BEGIN
+
+IF a < 10 THEN
+    a := a + 10;
+ELSE
+    SKIP;
+ENDIF
+
+END

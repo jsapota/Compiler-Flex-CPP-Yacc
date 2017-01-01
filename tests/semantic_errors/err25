@@ -1,0 +1,17 @@
+{
+    ERROR!
+    variable undeclared:    i
+    LINE: 15                i := i + 1;
+}
+
+VAR
+
+BEGIN
+
+FOR i FROM 0 TO 5 DO
+    WRITE i;
+ENDFOR
+
+i := i + 1;
+
+END

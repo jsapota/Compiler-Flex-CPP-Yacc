@@ -1,0 +1,20 @@
+{
+    ERROR!  unused variable:        a
+}
+
+VAR
+
+a b c
+
+BEGIN
+
+b := 0;
+c := 0;
+
+IF b <> c THEN
+    a := b + c;
+ELSE
+    a := b * c;
+ENDIF
+
+END

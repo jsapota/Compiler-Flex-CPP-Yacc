@@ -1,0 +1,22 @@
+{
+    ERROR!
+    array member out of array range:       t[ 10 ]
+    LINE: 20            t[10] := 100;
+}
+
+VAR
+
+t[10]
+
+BEGIN
+
+READ t[0];
+READ t[1];
+
+FOR i FROM 2 TO 9 DO
+    t[i] := 0;
+ENDFOR
+
+t[10] := 100;
+
+END

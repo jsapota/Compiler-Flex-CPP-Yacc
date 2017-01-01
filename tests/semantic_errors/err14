@@ -1,0 +1,15 @@
+{
+    ERROR!
+    wrong use, var is not an array: c
+    LINE: 13                c[1] := a + b;
+}
+
+VAR
+
+a b c
+
+BEGIN
+
+c[1] := a + b;
+
+END

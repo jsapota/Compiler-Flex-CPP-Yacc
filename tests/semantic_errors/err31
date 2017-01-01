@@ -1,0 +1,27 @@
+{
+    ERROR!
+    iterator overwrite:     i
+    LINE: 20                                READ i;
+}
+
+VAR
+
+a b c
+
+BEGIN
+
+READ a;
+b := a + a;
+
+FOR i FROM a TO b DO
+    FOR j FROM a TO b DO
+        FOR k FROM a TO b DO
+            FOR l FROM a TO b DO
+                READ i;
+                c := i + l;
+            ENDFOR
+        ENDFOR
+    ENDFOR
+ENDFOR
+
+END

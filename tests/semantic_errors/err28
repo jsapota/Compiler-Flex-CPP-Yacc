@@ -1,0 +1,13 @@
+{
+    WARNING!        unused variable:        a
+}
+
+VAR
+
+a
+
+BEGIN
+
+a := 0;
+
+END

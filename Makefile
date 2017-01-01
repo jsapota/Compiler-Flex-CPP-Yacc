@@ -12,9 +12,10 @@ SRCS = $(wildcard $(SDIR)/*.cpp)
 OBJS = $(SRCS:$(SDIR)/%.cpp=$(ODIR)/%.o)
 DEPS = $(wildcard $(IDIR)/*.h)
 
-all: compiler
+all: compiler interpreter test
 compiler: $(EXEC)
 interpreter: interpreter.out interpreter-cln.out
+test: test.out compiler interpreter
 
 # Create YAC files
 $(ODIR)/parser.tab.c $(IDIR)/parser.tab.h: $(SDIR)/parser.y
@@ -39,9 +40,13 @@ interpreter.out: ./external/interpreter.cc
 interpreter-cln.out: ./external/interpreter-cln.cc
 	$(CXX) $(CXXFLAGS) $< -lcln -o $@
 
+test.out: ./tests/test.cpp
+	$(CXX) $(CXXFLAGS) $< -o $@ -I$(IDIR) && ./test.out 
+
 clean:
 	rm -rf $(ODIR)/*
 	rm -rf $(IDIR)/parser.tab.h
 	rm -f $(EXEC)
 	rm -f interpreter.out
 	rm -f interpreter-cln.out
+	rm -f test.out

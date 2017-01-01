@@ -1,0 +1,17 @@
+{
+    ERROR!
+    uninitialized variable: a
+    LINE: 13                WHILE a <> b DO
+}
+
+VAR
+
+a b c
+
+BEGIN
+
+WHILE a <> b DO
+    a := a + b;
+ENDWHILE
+
+END

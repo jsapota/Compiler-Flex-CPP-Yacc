@@ -1,0 +1,23 @@
+{
+    ERROR!
+    iterator overwrite:     j
+    LINE: 19                        j := j + 1;
+}
+
+VAR
+
+a b
+
+BEGIN
+
+a := 0;
+b := a;
+
+FOR i FROM a TO b DO
+    a := i + 1;
+    FOR j FROM a TO b DO
+        j := j + 1;
+    ENDFOR
+ENDFOR
+
+END

@@ -1,0 +1,17 @@
+{
+    ERROR!
+    wrong use, var is an array:     a
+    LINE: 13         WHILE a < 10 DO
+}
+
+VAR
+
+a[2]
+
+BEGIN
+
+WHILE a < 10 DO
+    a := a + 10;
+ENDWHILE
+
+END

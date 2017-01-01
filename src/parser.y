@@ -1,6 +1,6 @@
 %{
 
-#include "../include/common.h"
+#include <common.h>
 int yylex(void);
 void yyerror(const char *msg);
 static uint64_t address = 0;

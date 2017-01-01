@@ -3,3 +3,7 @@ obj/*
 !obj/.gitkeeper
 compiler.out
 *.swp
+include/parser.tab.h
+interpreter.out
+interpreter-cln.out
+~*

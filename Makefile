@@ -1,7 +1,7 @@
-CC = g++
-CFLAGS = -std=c++11 -Wall -pedantic -O2
+CXX = g++
+CXXFLAGS = -std=c++11 -Wall -pedantic -O3
 LEX = flex
-YACC = bison
+YAC = bison
 
 IDIR = ./include
 ODIR = ./obj
@@ -14,11 +14,11 @@ DEPS = $(wildcard $(IDIR)/*.h)
 
 all: compiler
 compiler: $(EXEC)
+interpreter: interpreter.out interpreter-cln.out
 
-
-# Create YACC files
+# Create YAC files
 $(ODIR)/parser.tab.c $(IDIR)/parser.tab.h: $(SDIR)/parser.y
-	$(YACC) --defines=$(IDIR)/parser.tab.h $(SDIR)/parser.y -o $(ODIR)/parser.tab.c
+	$(YAC) --defines=$(IDIR)/parser.tab.h $(SDIR)/parser.y -o $(ODIR)/parser.tab.c
 
 # Create LEX files
 $(ODIR)/parser_lex.yy.c: $(SDIR)/parser.l $(IDIR)/parser.tab.h
@@ -26,13 +26,22 @@ $(ODIR)/parser_lex.yy.c: $(SDIR)/parser.l $(IDIR)/parser.tab.h
 
 # To obtain object files#
 $(ODIR)/%.o: $(SDIR)/%.cpp $(DEPS)
-	$(CC) $(CFLAGS) $(DEBUG) -c $< -o $@ -I$(IDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@ -I$(IDIR)
 
 # Compile and link all together
 $(EXEC): $(ODIR)/parser_lex.yy.c $(ODIR)/parser.tab.c $(IDIR)/parser.tab.h $(OBJS)
-	$(CC) $(CFLAGS) -DDEBUG_MODE -D_GNU_SOURCE -L${LDIR} -I${IDIR} $(ODIR)/parser.tab.c $(ODIR)/parser_lex.yy.c $(OBJS) $(LIBS) -o $@
+	$(CXX) $(CXXFLAGS) -D_GNU_SOURCE -I$(IDIR) $(ODIR)/parser.tab.c $(ODIR)/parser_lex.yy.c $(OBJS) -o $@
+
+##### INTERPRETER #####
+interpreter.out: ./external/interpreter.cc
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+interpreter-cln.out: ./external/interpreter-cln.cc
+	$(CXX) $(CXXFLAGS) $< -lcln -o $@
 
 clean:
 	rm -rf $(ODIR)/*
 	rm -rf $(IDIR)/parser.tab.h
 	rm -f $(EXEC)
+	rm -f interpreter.out
+	rm -f interpreter-cln.out

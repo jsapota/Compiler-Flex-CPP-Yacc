@@ -1,7 +1,7 @@
 %{
 
 #include "../include/parser.tab.h"
-#include "../include/common.h"
+#include <common.h>
 
 #define YY_NO_INPUT
 #define YY_NO_UNPUT

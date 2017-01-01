@@ -1,23 +1,15 @@
 {
     ERROR!
-    iterator overwrite:     j
-    LINE: 19                        j := j + 1;
+    array with size 0:      a
+    LINE: 9         a[0]
 }
 
 VAR
 
-a b
+a[0]
 
 BEGIN
 
-a := 0;
-b := a;
-
-FOR i FROM a TO b DO
-    a := i + 1;
-    FOR j FROM a TO b DO
-        j := j + 1;
-    ENDFOR
-ENDFOR
+a[0] := 1;
 
 END

@@ -103,10 +103,8 @@ static int test_semantic()
     err += !!system( "./compiler.out < ./tests/semantic_errors/err28 >/dev/null 2>&1");
     err += !!system( "./compiler.out < ./tests/semantic_errors/err29 >/dev/null 2>&1");
     err += !!system( "./compiler.out < ./tests/semantic_errors/err30 >/dev/null 2>&1");
-    err += !!system( "./compiler.out < ./tests/semantic_errors/err31 >/dev/null 2>&1");
-    err += !!system( "./compiler.out < ./tests/semantic_errors/err32 >/dev/null 2>&1");
 
-    return err == 32 ? PASSED : FAILED;
+    return err == 30 ? PASSED : FAILED;
 }
 
 static void run(void)

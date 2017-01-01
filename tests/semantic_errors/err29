@@ -1,5 +1,7 @@
 {
-    ERROR!  unused variable:        a
+    ERROR!
+    iterator overwrite:     i
+    LINE: 20                                READ i;
 }
 
 VAR
@@ -8,13 +10,18 @@ a b c
 
 BEGIN
 
-b := 0;
-c := 0;
+READ a;
+b := a + a;
 
-IF b <> c THEN
-    a := b + c;
-ELSE
-    a := b * c;
-ENDIF
+FOR i FROM a TO b DO
+    FOR j FROM a TO b DO
+        FOR k FROM a TO b DO
+            FOR l FROM a TO b DO
+                READ i;
+                c := i + l;
+            ENDFOR
+        ENDFOR
+    ENDFOR
+ENDFOR
 
 END

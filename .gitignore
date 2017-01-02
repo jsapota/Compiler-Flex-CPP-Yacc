@@ -7,3 +7,9 @@ include/parser.tab.h
 interpreter.out
 interpreter-cln.out
 ~*
+*.sh
+*.out
+file
+file*
+tests/*
+external/*

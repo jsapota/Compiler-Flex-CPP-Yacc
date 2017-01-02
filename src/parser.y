@@ -248,6 +248,15 @@ expr:
                 }
             }
 
+            // R2 = a , R3 = b
+            pomp(2,$1->val); //a
+            pomp(3,$3->val); //b
+            if($3->val > 0)
+            {
+                
+            }
+            else
+                std :: cout << "HALT" << std :: endl;
 
 
 
@@ -397,42 +406,37 @@ expr:
     }
 ;
 
+    // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
 cond:
 	value '=' value       { printf("[BISON]EQUAL\n");
-                /*
-                    SUB
-                    JZERO
-                    INC
-                */
 
-            // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
-            // Napomuj R2 = a, R3 = a, R4 = b
-            pomp(2,$1->val); //a
-            pomp(3,$1->val); //a
-            pomp(4,$3->val); //b
+        // Napomuj R2 = a, R3 = a, R4 = b
+        pomp(2,$1->val); //a
+        pomp(3,$1->val); //a
+        pomp(4,$3->val); //b
 
-            //Czy b <= a
-            std :: cout << "COPY" << " 4" << std :: endl;       // b-> R0
-            std :: cout << "SUB" << " 2" << std :: endl;        // R2 = a - b
-            std :: cout << "JZERO 2" << " ET" << label++ << std :: endl; // jezeli R2 == 0 to skocz do ET1
-            std :: cout << "JUMP ET" << label++ << std :: endl; //  skocz do ET2 - FALSE
+        //Czy b <= a
+        std :: cout << "COPY" << " 4" << std :: endl;       // b-> R0
+        std :: cout << "SUB" << " 2" << std :: endl;        // R2 = a - b
+        std :: cout << "JZERO 2" << " ET" << label++ << std :: endl; // jezeli R2 == 0 to skocz do ET1
+        std :: cout << "JUMP ET" << label++ << std :: endl; //  skocz do ET2 - FALSE
 
-            // ET1 - pierwszy warunek spelniony - teraz drugi warunek
-            //CZY b - a == 0 ??
-            std :: cout << "COPY" << " 2" << std :: endl;// b-> R0
-            std :: cout << "SUB" << " 3" << std :: endl;// R3 = b - a
-            std :: cout << "JZERO 3" << " ET" << label++ << std :: endl; // jezeli R3 == 0 to skocz do ET3 czyli rownosc spelniona
-            std :: cout << "JUMP ET" << label-- << std :: endl; //  // ma skoczyc do 2 a nie do 3 wiec label--
+        // ET1 - pierwszy warunek spelniony - teraz drugi warunek
+        //CZY b - a == 0 ??
+        std :: cout << "COPY" << " 2" << std :: endl;// b-> R0
+        std :: cout << "SUB" << " 3" << std :: endl;// R3 = b - a
+        std :: cout << "JZERO 3" << " ET" << label++ << std :: endl; // jezeli R3 == 0 to skocz do ET3 czyli rownosc spelniona
+        std :: cout << "JUMP ET" << label-- << std :: endl; //  // ma skoczyc do 2 a nie do 3 wiec label--
 
 
-            // ET2 - nie spelnione - wrzuc wartosc do R0 - false i skocz do etykiety ET3
-            //a > b lub b > a
-            std :: cout << "ZERO 0" << std :: endl;
-            std :: cout << "JUMP ET" << label++ << std :: endl;
+        // ET2 - nie spelnione - wrzuc wartosc do R0 - false i skocz do etykiety ET3
+        //a > b lub b > a
+        std :: cout << "ZERO 0" << std :: endl;
+        std :: cout << "JUMP ET" << label++ << std :: endl;
 
-            //ET3 - END
-            std :: cout << "INC 0" << std :: endl;
-            std :: cout << "HALT"  << std :: endl;
+        //ET3 - END
+        std :: cout << "INC 0" << std :: endl;
+        std :: cout << "HALT"  << std :: endl;
 
 
   }
@@ -449,9 +453,10 @@ cond:
         std :: cout << "COPY" << " 4" << std :: endl;       // b-> R0
         std :: cout << "SUB" << " 2" << std :: endl;        // R2 = a - b
         std :: cout << "JZERO 2" << " ET" << label++ << std :: endl; // b > a lub b == a
+        std :: cout << "INC 0" << std :: endl;
         std :: cout << "JUMP ET" << label += 2 << std :: endl; //  a-b > 0 to mamy nierownosc wiec skocz do ET3 - TRUE
 
-        // ET1 - b >= a
+        // ET1 wiec b >= a
         //CZY a == b?
         std :: cout << "COPY" << " 2" << std :: endl;// a-> R0
         std :: cout << "SUB" << " 3" << std :: endl;// R3 = b - a
@@ -468,12 +473,38 @@ cond:
     }
 	| value '<' value
     {
+        // a < b lub a + 1 <= b
         printf("[BISON]LT\n");
         pomp(2,$1->val); //a
         pomp(3,$3->val); //b
+        std :: cout << "COPY 3" << std :: endl;     //R0 = b
+        std :: cout << "INC 0" << std :: endl;
+        std :: cout << "SUB 2" << std :: endl;      //R2 = a - b = R2 - memR0
+        std :: cout << "JZERO 2 ET" << label++ << std :: endl;      //Jezeli R2 == 0 to mamy spelniony warunek
+        std :: cout << "JUMP ET" << label++ << std :: endl;         // Jezeli nie to skocz do ET2 - false
 
+        //ET1 - TRUE
+        std :: cout << "INC 0"  << std :: endl;
+        std :: cout << "JUMP ET" << label++ << std :: endl;         // Zakoncz - skocz do etykiety ET3
+
+        //ET2 - FALSE
+        std :: cout << "ZERO 0" << std :: endl;     // Nie zwiekszamy etykiety bo zostala zwiekszona do 3 w TRUE
+        std :: cout << "JUMP ET" << label << std :: endl;         // Zakoncz - skocz do etykiety ET3
+
+        //ET3 -  END
+        std :: cout << "HALT" << std :: endl;
+
+    }
+	| value '>' value
+    {
+        // a > b lub a >= b + 1
+        printf("[BISON]GT\n");
+        pomp(2,$1->val); //a
+        pomp(3,$3->val); //b
+        // a >= b
         // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
         std :: cout << "COPY 2" << std :: endl; //R0 = a
+        std :: cout << "INC 0" << std :: endl;
         std :: cout << "SUB 3" << std :: endl;  //R3 = b - a = R3 - memR0
         std :: cout << "JZERO 3 ET" << label++ << std :: endl;//Jezeli R3 == 0 to mamy
         std :: cout << "JUMP ET" << label++ << std :: endl;//Jezeli nie to END FALSE
@@ -488,10 +519,12 @@ cond:
 
         //ET3 -  END
         std :: cout << "HALT" << std :: endl;
+
     }
-	| value '>' value
+	| value LE value
     {
-        printf("[BISON]GT\n");
+        // a <= b
+        printf("[BISON]LE\n");
         pomp(2,$1->val); //a
         pomp(3,$3->val); //b
         std :: cout << "COPY 3" << std :: endl;     //R0 = b
@@ -509,17 +542,31 @@ cond:
 
         //ET3 -  END
         std :: cout << "HALT" << std :: endl;
-    }
-	| value LE value
-    {
-        printf("[BISON]LE\n");
-
 
     }
 	| value GE value
     {
-        printf("[BISON]GE\n");
 
+        printf("[BISON]GE\n");
+        pomp(2,$1->val); //a
+        pomp(3,$3->val); //b
+        // a >= b
+        // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
+        std :: cout << "COPY 2" << std :: endl; //R0 = a
+        std :: cout << "SUB 3" << std :: endl;  //R3 = b - a = R3 - memR0
+        std :: cout << "JZERO 3 ET" << label++ << std :: endl;//Jezeli R3 == 0 to mamy
+        std :: cout << "JUMP ET" << label++ << std :: endl;//Jezeli nie to END FALSE
+
+        //ET1 - TRUE
+        std :: cout << "INC 0"  << std :: endl;
+        std :: cout << "JUMP ET" << label++ << std :: endl;         // Zakoncz - skocz do etykiety ET3
+
+        //ET2 - FALSE
+        std :: cout << "ZERO 0" << std :: endl;     // Nie zwiekszamy etykiety bo zostala zwiekszona do 3 w TRUE
+        std :: cout << "JUMP ET" << label << std :: endl;         // Zakoncz - skocz do etykiety ET3
+
+        //ET3 -  END
+        std :: cout << "HALT" << std :: endl;
 
     }
 ;

@@ -4,6 +4,7 @@
 int yylex(void);
 void yyerror(const char *msg);
 static uint64_t address = 0;
+static int label = 0;
 void pomp(int numRegister, uint64_t val);
 
 /* 0 iff ikty bit w n = 0, else 1 */
@@ -86,13 +87,6 @@ vdeclar:
 	%empty
 	| vdeclar VARIABLE
     {
-
-        auto it = variables.find(std :: string($2.str));
-        if (it != variables.end())
-        {
-            std :: cerr << "REDECLARED\t" << $2.str << std :: endl;
-            exit(1);
-        }
         /*
             reg = -1;
             addr = -1;
@@ -105,6 +99,12 @@ vdeclar:
 
             val = 0;
         */
+        auto it = variables.find(std :: string($2.str));
+        if (it != variables.end())
+        {
+            std :: cerr << "REDECLARED\t" << $2.str << std :: endl;
+            exit(1);
+        }
         Variable var;
         var.name = std :: string($2.str);
         var.reg = -1;
@@ -120,12 +120,6 @@ vdeclar:
     }
 	| vdeclar VARIABLE '[' NUM ']'
     {
-        auto it = variables.find(std :: string($2.str));
-        if (it != variables.end())
-        {
-            std :: cerr << "REDECLARED\t" << $2.str << std :: endl;
-            exit(1);
-        }
         /*
             reg = -1;
             addr = -1;
@@ -136,6 +130,12 @@ vdeclar:
             upToDate = true;
             iter = false;
         */
+        auto it = variables.find(std :: string($2.str));
+        if (it != variables.end())
+        {
+            std :: cerr << "REDECLARED\t" << $2.str << std :: endl;
+            exit(1);
+        }
         Variable var;
         var.name = std :: string($2.str);
         var.reg = -1;
@@ -215,7 +215,6 @@ expr:
                 pomp(1,$1->val);
             }
             else{
-
                 if($1->array) {
                     if($1->varOffset == NULL)
                         pomp(0,$1->addr + $1->offset);
@@ -248,6 +247,18 @@ expr:
                     exit(1);
                 }
             }
+
+
+
+
+
+
+
+
+
+
+
+
     }
 	| value '-' value  {
             printf("[BISON]SUB\n");
@@ -268,6 +279,20 @@ expr:
                     exit(1);
                 }
             }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 	| value '*' value  {
         printf("[BISON]MULTI\n");
@@ -288,6 +313,17 @@ expr:
                 exit(1);
             }
         }
+
+
+
+
+
+
+
+
+
+
+
     }
 	| value '/' value  {
         printf("[BISON]DIV\n");
@@ -308,6 +344,20 @@ expr:
                 exit(1);
             }
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 	| value '%' value  {
         printf("[BISON]MOD\n");
@@ -328,24 +378,150 @@ expr:
                     exit(1);
                 }
             }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 ;
 
 cond:
 	value '=' value       { printf("[BISON]EQUAL\n");
                 /*
-                    Do wymyslenia: jak sie skapnac ze cos jest w relacji
-                    a == b ??
                     SUB
                     JZERO
                     INC
                 */
+
+            // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
+            // Napomuj R2 = a, R3 = a, R4 = b
+            pomp(2,$1->val); //a
+            pomp(3,$1->val); //a
+            pomp(4,$3->val); //b
+
+            //Czy b <= a
+            std :: cout << "COPY" << " 4" << std :: endl;       // b-> R0
+            std :: cout << "SUB" << " 2" << std :: endl;        // R2 = a - b
+            std :: cout << "JZERO 2" << " ET" << label++ << std :: endl; // jezeli R2 == 0 to skocz do ET1
+            std :: cout << "JUMP ET" << label++ << std :: endl; //  skocz do ET2 - FALSE
+
+            // ET1 - pierwszy warunek spelniony - teraz drugi warunek
+            //CZY b - a == 0 ??
+            std :: cout << "COPY" << " 2" << std :: endl;// b-> R0
+            std :: cout << "SUB" << " 3" << std :: endl;// R3 = b - a
+            std :: cout << "JZERO 3" << " ET" << label++ << std :: endl; // jezeli R3 == 0 to skocz do ET3 czyli rownosc spelniona
+            std :: cout << "JUMP ET" << label-- << std :: endl; //  // ma skoczyc do 2 a nie do 3 wiec label--
+
+
+            // ET2 - nie spelnione - wrzuc wartosc do R0 - false i skocz do etykiety ET3
+            //a > b lub b > a
+            std :: cout << "ZERO 0" << std :: endl;
+            std :: cout << "JUMP ET" << label++ << std :: endl;
+
+            //ET3 - END
+            std :: cout << "INC 0" << std :: endl;
+            std :: cout << "HALT"  << std :: endl;
+
+
   }
-	| value NE  value    { printf("[BISON]NE\n");      }
-	| value '<' value      { printf("[BISON]LT\n");      }
-	| value '>' value      { printf("[BISON]GT\n");      }
-	| value LE value     { printf("[BISON]LE\n");      }
-	| value GE value     { printf("[BISON]GE\n");      }
+	| value NE value
+    {
+        printf("[BISON]NE\n");
+        // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
+        // Napomuj R2 = a, R3 = a, R4 = b
+        pomp(2,$1->val); //a
+        pomp(3,$1->val); //a
+        pomp(4,$3->val); //b
+
+        //Czy b => a
+        std :: cout << "COPY" << " 4" << std :: endl;       // b-> R0
+        std :: cout << "SUB" << " 2" << std :: endl;        // R2 = a - b
+        std :: cout << "JZERO 2" << " ET" << label++ << std :: endl; // b > a lub b == a
+        std :: cout << "JUMP ET" << label += 2 << std :: endl; //  a-b > 0 to mamy nierownosc wiec skocz do ET3 - TRUE
+
+        // ET1 - b >= a
+        //CZY a == b?
+        std :: cout << "COPY" << " 2" << std :: endl;// a-> R0
+        std :: cout << "SUB" << " 3" << std :: endl;// R3 = b - a
+        std :: cout << "JZERO 3" << " ET" << label--  << std :: endl; // jezeli R3 == 0 to skocz do ET2 bo FALSE
+        std :: cout << "INC 0" << std :: endl;
+        std :: cout << "JUMP ET" << label++ << std :: endl; //  skaczemy do ET3 - mamy nierownosc
+
+        //ET2
+        std :: cout << "ZERO 0" << std :: endl;
+        std :: cout << "JUMP ET" << label << std :: endl;
+
+        //ET3 - END
+        std :: cout << "HALT"  << std :: endl;
+    }
+	| value '<' value
+    {
+        printf("[BISON]LT\n");
+        pomp(2,$1->val); //a
+        pomp(3,$3->val); //b
+
+        // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
+        std :: cout << "COPY 2" << std :: endl; //R0 = a
+        std :: cout << "SUB 3" << std :: endl;  //R3 = b - a = R3 - memR0
+        std :: cout << "JZERO 3 ET" << label++ << std :: endl;//Jezeli R3 == 0 to mamy
+        std :: cout << "JUMP ET" << label++ << std :: endl;//Jezeli nie to END FALSE
+
+        //ET1 - TRUE
+        std :: cout << "INC 0"  << std :: endl;
+        std :: cout << "JUMP ET" << label++ << std :: endl;         // Zakoncz - skocz do etykiety ET3
+
+        //ET2 - FALSE
+        std :: cout << "ZERO 0" << std :: endl;     // Nie zwiekszamy etykiety bo zostala zwiekszona do 3 w TRUE
+        std :: cout << "JUMP ET" << label << std :: endl;         // Zakoncz - skocz do etykiety ET3
+
+        //ET3 -  END
+        std :: cout << "HALT" << std :: endl;
+    }
+	| value '>' value
+    {
+        printf("[BISON]GT\n");
+        pomp(2,$1->val); //a
+        pomp(3,$3->val); //b
+        std :: cout << "COPY 3" << std :: endl;     //R0 = b
+        std :: cout << "SUB 2" << std :: endl;      //R2 = a - b = R2 - memR0
+        std :: cout << "JZERO 2 ET" << label++ << std :: endl;      //Jezeli R2 == 0 to mamy spelniony warunek
+        std :: cout << "JUMP ET" << label++ << std :: endl;         // Jezeli nie to skocz do ET2 - false
+
+        //ET1 - TRUE
+        std :: cout << "INC 0"  << std :: endl;
+        std :: cout << "JUMP ET" << label++ << std :: endl;         // Zakoncz - skocz do etykiety ET3
+
+        //ET2 - FALSE
+        std :: cout << "ZERO 0" << std :: endl;     // Nie zwiekszamy etykiety bo zostala zwiekszona do 3 w TRUE
+        std :: cout << "JUMP ET" << label << std :: endl;         // Zakoncz - skocz do etykiety ET3
+
+        //ET3 -  END
+        std :: cout << "HALT" << std :: endl;
+    }
+	| value LE value
+    {
+        printf("[BISON]LE\n");
+
+
+    }
+	| value GE value
+    {
+        printf("[BISON]GE\n");
+
+
+    }
 ;
 
 value:

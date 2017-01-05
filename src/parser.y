@@ -247,25 +247,37 @@ expr:
                     exit(1);
                 }
             }
-
-            if($1->isNum && $3->isNum){
+                // stala i stala
+            if($1->isNum && $3->isNum)
                 pomp(2, $1->val + $3->val);
+            else{
+                // zmienna i stala
+                if(!$1->isNum && $3->isNum){
+                    pomp(0,$1->addr); //R0 = a.addr;
+                    std :: cout << "LOAD 2" << std :: endl; // R2 = a;
+                    std :: cout << "ZERO 0" << std :: endl; // R0 = 0;
+                    pomp(0,$3->val); // R0 = b;
+                    std :: cout << "ADD 2" << std :: endl; //R2 = a + b
+                }
+                // stala i zmienna
+                if($1->isNum && !$3->isNum){
+                    pomp(0,$3->addr); //R0 = a.addr;
+                    std :: cout << "LOAD 2" << std :: endl; // R2 = a;
+                    std :: cout << "ZERO 0" << std :: endl; // R0 = 0;
+                    pomp(0,$1->val); // R0 = b;
+                    std :: cout << "ADD 2" << std :: endl; //R2 = a + b
+                }
+                // dwie stale
+                if(!$1->isNum && !$3->isNum){
+                    pomp(0,$3->addr); //R0 = a.addr;
+                    std :: cout << "LOAD 2" << std :: endl; // R2 = a;
+                    std :: cout << "ZERO 0" << std :: endl; // R0 = 0;
+                    pomp(0,$1->addr); // R0 = b.addr;
+                    std :: cout << "LOAD 3" << std :: endl; // R2 = a;
+                    std :: cout << "COPY 3" << std :: endl; // R0 = a;
+                    std :: cout << "ADD 2" << std :: endl; //R2 = a + memR0 = a + b
+                }
             }
-            // R2 = a , R3 = b
-            pomp(2,$1->val); //a
-            pomp(3,$3->val); //b
-
-
-
-
-
-
-
-
-
-
-
-
     }
 	| value '-' value  {
             printf("[BISON]SUB\n");
@@ -286,7 +298,36 @@ expr:
                     exit(1);
                 }
             }
-
+            // stala i stala
+        if($1->isNum && $3->isNum)
+            pomp(2, $1->val - $3->val);
+        else{
+            // zmienna i stala
+            if(!$1->isNum && $3->isNum){
+                pomp(0,$1->addr); //R0 = a.addr;
+                std :: cout << "LOAD 2" << std :: endl; // R2 = a;
+                std :: cout << "ZERO 0" << std :: endl; // R0 = 0;
+                pomp(0,$3->val); // R0 = b;
+                std :: cout << "SUB 2" << std :: endl; //R2 = a + b
+            }
+            // stala i zmienna
+            if($1->isNum && !$3->isNum){
+                pomp(0,$3->addr); //R0 = a.addr;
+                std :: cout << "LOAD 2" << std :: endl; // R2 = a;
+                std :: cout << "ZERO 0" << std :: endl; // R0 = 0;
+                pomp(0,$1->val); // R0 = b;
+                std :: cout << "SUB 2" << std :: endl; //R2 = a + b
+            }
+            // dwie stale
+            if(!$1->isNum && !$3->isNum){
+                pomp(0,$3->addr); //R0 = a.addr;
+                std :: cout << "LOAD 2" << std :: endl; // R2 = a;
+                std :: cout << "ZERO 0" << std :: endl; // R0 = 0;
+                pomp(0,$1->addr); // R0 = b.addr;
+                std :: cout << "LOAD 3" << std :: endl; // R2 = a;
+                std :: cout << "COPY 3" << std :: endl; // R0 = a;
+                std :: cout << "SUB 2" << std :: endl; //R2 = a + memR0 = a + b
+            }
 
 
 

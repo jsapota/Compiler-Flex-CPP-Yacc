@@ -328,19 +328,6 @@ expr:
                 std :: cout << "COPY 3" << std :: endl; // R0 = a;
                 std :: cout << "SUB 2" << std :: endl; //R2 = a + memR0 = a + b
             }
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 	| value '*' value  { // Wedlug mnie powinno dzialac. To obmyslilem w nocy
         printf("[BISON]MULTI\n");
@@ -362,11 +349,6 @@ expr:
             }
         }
 
-
-
-
-
-
         //  Zeruje na wszelki wypadek
         std :: cout << "ZERO 2" << std :: endl;
         std :: cout << "ZERO 3" << std :: endl;
@@ -376,11 +358,15 @@ expr:
 
 
         int a = $3->val;
+
+        // 5 * 7 = 5 + 5 * 6 = 5 + 10 * 3 = 5 + 10 + 10 * 2 = 20 + 5 + 10 = 35
+        // 3 * 11 = 3 + 3 * 10 = 3 + 6 * 5 = 3 + 6 + 6 * 4 = 3 + 6 + 12 * 2 = 3 + 6 + 24 = 33
         while( a > 1){
             if(a % 2 == 0){
                 // czym sie rozni Pr0 od R0 - COPY R2 czy STORE R2
                 std :: cout << "SHR 3" << std :: endl;
                 std :: cout << "SHL 2" << std :: endl;
+                a = a/2;
             }
             else{
                 std :: cout << "COPY 2" << std :: endl;
@@ -389,10 +375,10 @@ expr:
                 // teraz mnoznik-b jest juz parzysty wiec jak w pierwszym przypadku
                 std :: cout << "SHR 3" << std :: endl;
                 std :: cout << "SHL 2" << std :: endl;
+                a -= 1;
             }
         }
-        // 5 * 7 = 5 + 5 * 6 = 5 + 10 * 3 = 5 + 10 + 10 * 2 = 20 + 5 + 10 = 35
-        // 3 * 11 = 3 + 3 * 10 = 3 + 6 * 5 = 3 + 6 + 6 * 4 = 3 + 6 + 12 * 2 = 3 + 6 + 24 = 33
+        // Dodaj wszystkie czynniki wolne ktore sumowalismy w ELSE
         std :: cout << "COPY 4" << std :: endl;
         // Wynik w R2 - bo nie bylem pewien z konwencja gdzie go wrzucic.
         std :: cout << "ADD 2" << std :: endl;

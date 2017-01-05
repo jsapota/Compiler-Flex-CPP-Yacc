@@ -248,15 +248,13 @@ expr:
                 }
             }
 
+            if($1->isNum && $3->isNum){
+                pomp(2, $1->val + $3->val);
+            }
             // R2 = a , R3 = b
             pomp(2,$1->val); //a
             pomp(3,$3->val); //b
-            if($3->val > 0)
-            {
-                
-            }
-            else
-                std :: cout << "HALT" << std :: endl;
+
 
 
 
@@ -303,7 +301,7 @@ expr:
 
 
     }
-	| value '*' value  {
+	| value '*' value  { // Wedlug mnie powinno dzialac. To obmyslilem w nocy
         printf("[BISON]MULTI\n");
         std :: cout << $1->name << " * " << $3->name << std :: endl;
         if(!$1->isNum){
@@ -328,10 +326,35 @@ expr:
 
 
 
+        //  Zeruje na wszelki wypadek
+        std :: cout << "ZERO 2" << std :: endl;
+        std :: cout << "ZERO 3" << std :: endl;
+        std :: cout << "ZERO 4" << std :: endl;
+        pomp(2,$1->val); //a
+        pomp(3,$3->val); //b
 
 
-
-
+        int a = $3->val;
+        while( a > 1){
+            if(a % 2 == 0){
+                // czym sie rozni Pr0 od R0 - COPY R2 czy STORE R2
+                std :: cout << "SHR 3" << std :: endl;
+                std :: cout << "SHL 2" << std :: endl;
+            }
+            else{
+                std :: cout << "COPY 2" << std :: endl;
+                std :: cout << "ADD 4" << std :: endl;
+                std :: cout << "DEC 3" << std :: endl;
+                // teraz mnoznik-b jest juz parzysty wiec jak w pierwszym przypadku
+                std :: cout << "SHR 3" << std :: endl;
+                std :: cout << "SHL 2" << std :: endl;
+            }
+        }
+        // 5 * 7 = 5 + 5 * 6 = 5 + 10 * 3 = 5 + 10 + 10 * 2 = 20 + 5 + 10 = 35
+        // 3 * 11 = 3 + 3 * 10 = 3 + 6 * 5 = 3 + 6 + 6 * 4 = 3 + 6 + 12 * 2 = 3 + 6 + 24 = 33
+        std :: cout << "COPY 4" << std :: endl;
+        // Wynik w R2 - bo nie bylem pewien z konwencja gdzie go wrzucic.
+        std :: cout << "ADD 2" << std :: endl;
 
     }
 	| value '/' value  {
@@ -431,11 +454,9 @@ cond:
 
         // ET2 - nie spelnione - wrzuc wartosc do R0 - false i skocz do etykiety ET3
         //a > b lub b > a
-        std :: cout << "ZERO 0" << std :: endl;
         std :: cout << "JUMP ET" << label++ << std :: endl;
 
         //ET3 - END
-        std :: cout << "INC 0" << std :: endl;
         std :: cout << "HALT"  << std :: endl;
 
 
@@ -453,7 +474,6 @@ cond:
         std :: cout << "COPY" << " 4" << std :: endl;       // b-> R0
         std :: cout << "SUB" << " 2" << std :: endl;        // R2 = a - b
         std :: cout << "JZERO 2" << " ET" << label++ << std :: endl; // b > a lub b == a
-        std :: cout << "INC 0" << std :: endl;
         std :: cout << "JUMP ET" << label += 2 << std :: endl; //  a-b > 0 to mamy nierownosc wiec skocz do ET3 - TRUE
 
         // ET1 wiec b >= a
@@ -461,11 +481,9 @@ cond:
         std :: cout << "COPY" << " 2" << std :: endl;// a-> R0
         std :: cout << "SUB" << " 3" << std :: endl;// R3 = b - a
         std :: cout << "JZERO 3" << " ET" << label--  << std :: endl; // jezeli R3 == 0 to skocz do ET2 bo FALSE
-        std :: cout << "INC 0" << std :: endl;
         std :: cout << "JUMP ET" << label++ << std :: endl; //  skaczemy do ET3 - mamy nierownosc
 
         //ET2
-        std :: cout << "ZERO 0" << std :: endl;
         std :: cout << "JUMP ET" << label << std :: endl;
 
         //ET3 - END
@@ -478,17 +496,15 @@ cond:
         pomp(2,$1->val); //a
         pomp(3,$3->val); //b
         std :: cout << "COPY 3" << std :: endl;     //R0 = b
-        std :: cout << "INC 0" << std :: endl;
-        std :: cout << "SUB 2" << std :: endl;      //R2 = a - b = R2 - memR0
-        std :: cout << "JZERO 2 ET" << label++ << std :: endl;      //Jezeli R2 == 0 to mamy spelniony warunek
+        std :: cout << "INC 2" << std :: endl;
+        std :: cout << "SUB 2" << std :: endl;      //R2 = a + 1 - b = R2 - memR0 = 0
+        std :: cout << "JZERO 2 ET" << label ++ << std :: endl;      //Jezeli R2 == 0 to mamy spelniony warunek
         std :: cout << "JUMP ET" << label++ << std :: endl;         // Jezeli nie to skocz do ET2 - false
 
         //ET1 - TRUE
-        std :: cout << "INC 0"  << std :: endl;
         std :: cout << "JUMP ET" << label++ << std :: endl;         // Zakoncz - skocz do etykiety ET3
 
         //ET2 - FALSE
-        std :: cout << "ZERO 0" << std :: endl;     // Nie zwiekszamy etykiety bo zostala zwiekszona do 3 w TRUE
         std :: cout << "JUMP ET" << label << std :: endl;         // Zakoncz - skocz do etykiety ET3
 
         //ET3 -  END
@@ -504,17 +520,15 @@ cond:
         // a >= b
         // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
         std :: cout << "COPY 2" << std :: endl; //R0 = a
-        std :: cout << "INC 0" << std :: endl;
-        std :: cout << "SUB 3" << std :: endl;  //R3 = b - a = R3 - memR0
+        std :: cout << "INC 3" << std :: endl; //R3 = b + 1
+        std :: cout << "SUB 3" << std :: endl;  //R3 = b + 1 - a = R3 - memR0 = 0
         std :: cout << "JZERO 3 ET" << label++ << std :: endl;//Jezeli R3 == 0 to mamy
         std :: cout << "JUMP ET" << label++ << std :: endl;//Jezeli nie to END FALSE
 
         //ET1 - TRUE
-        std :: cout << "INC 0"  << std :: endl;
         std :: cout << "JUMP ET" << label++ << std :: endl;         // Zakoncz - skocz do etykiety ET3
 
         //ET2 - FALSE
-        std :: cout << "ZERO 0" << std :: endl;     // Nie zwiekszamy etykiety bo zostala zwiekszona do 3 w TRUE
         std :: cout << "JUMP ET" << label << std :: endl;         // Zakoncz - skocz do etykiety ET3
 
         //ET3 -  END

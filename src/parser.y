@@ -349,7 +349,7 @@ expr:
             }
         }
 
-        //  Zeruje na wszelki wypadek
+        /*//  Zeruje na wszelki wypadek
         std :: cout << "ZERO 2" << std :: endl;
         std :: cout << "ZERO 3" << std :: endl;
         std :: cout << "ZERO 4" << std :: endl;
@@ -382,6 +382,48 @@ expr:
         std :: cout << "COPY 4" << std :: endl;
         // Wynik w R2 - bo nie bylem pewien z konwencja gdzie go wrzucic.
         std :: cout << "ADD 2" << std :: endl;
+
+        // Czysty assembler
+        //  Zeruje na wszelki wypadek
+        std :: cout << "ZERO 2" << std :: endl;
+        std :: cout << "ZERO 3" << std :: endl;
+        std :: cout << "ZERO 4" << std :: endl;
+        pomp(1,$1->val); //a
+        pomp(2,$3->val); //b
+        pomp(3,$3->val); //b do operacji*/
+
+
+//////////  while a > 1
+
+        //  nieparzyste to ET1
+        std :: cout << "JODD 3 ET" << label++ << std :: endl;
+        //  parzyste to ET2
+        std :: cout << "JUMP ET" << label++ << std :: endl;
+//////////  ET1 -  a % 2 = 1
+        std :: cout << "COPY 1" << std :: endl; // czym sie rozni Pr0 od R0 - COPY R2 czy STORE R2
+        std :: cout << "ADD 4" << std :: endl; // tutaj sumujemy wolne wyrazy
+        std :: cout << "DEC 2" << std :: endl; // zmniejszamy mnoznik o 1 wiec juz jest parzysy
+        std :: cout << "SHR 2" << std :: endl;
+        std :: cout << "SHL 1" << std :: endl;
+        //  krok while a = a - 1
+        std :: cout << "DEC 3" << std :: endl;
+//////////  koniec ifa w ktorym mamy nieparzysty mnoznik
+
+//////////  ET2 warunek ifa z parzystym mnoznikiem
+        std :: cout << "SHR 2" << std :: endl;
+        std :: cout << "SHL 1" << std :: endl;
+        std :: cout << "SHR 2" << std :: endl;
+        //  krok while a = a/2
+        std :: cout << "SHR 3" << std :: endl;
+/////////   koniec ifa parzystego
+        std :: cout << "JZERO 3 ET" << label-2 << std :: endl;
+/////////   koniec while
+
+
+/////////  ET3 - END Dodaj wszystkie czynniki wolne ktore sumowalismy w ELSE
+        std :: cout << "COPY 4" << std :: endl;
+        std :: cout << "ADD 2" << std :: endl;
+////////   Wynik w R2 - bo nie bylem pewien z konwencja gdzie go wrzucic.
 
     }
 	| value '/' value  {

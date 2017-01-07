@@ -371,7 +371,7 @@ expr:
         // Dodaj wszystkie czynniki wolne ktore sumowalismy w ELSE
         std :: cout << "COPY 4" << std :: endl;
         // Wynik w R2 - bo nie bylem pewien z konwencja gdzie go wrzucic.
-        std :: cout << "ADD 2" << std :: endl;
+        std :: cout << "ADD 2" << std :: endl;*/
 
         // Czysty assembler
         //  Zeruje na wszelki wypadek
@@ -380,7 +380,7 @@ expr:
         std :: cout << "ZERO 4" << std :: endl;
         pomp(1,$1->val); //a
         pomp(2,$3->val); //b
-        pomp(3,$3->val); //b do operacji*/
+        pomp(3,$3->val); //b do operacji
 
 
 //////////  while a > 1

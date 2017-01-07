@@ -254,27 +254,21 @@ expr:
                 // zmienna i stala
                 if(!$1->isNum && $3->isNum){
                     pomp(0,$1->addr); //R0 = a.addr;
-                    std :: cout << "LOAD 2" << std :: endl; // R2 = a;
-                    std :: cout << "ZERO 0" << std :: endl; // R0 = 0;
-                    pomp(0,$3->val); // R0 = b;
-                    std :: cout << "ADD 2" << std :: endl; //R2 = a + b
+                    pomp(1,$3->val); // R1 = b;
+                    std :: cout << "ADD 1" << std :: endl; //R1 = memRO + b = a + b
                 }
                 // stala i zmienna
                 if($1->isNum && !$3->isNum){
-                    pomp(0,$3->addr); //R0 = a.addr;
-                    std :: cout << "LOAD 2" << std :: endl; // R2 = a;
-                    std :: cout << "ZERO 0" << std :: endl; // R0 = 0;
-                    pomp(0,$1->val); // R0 = b;
-                    std :: cout << "ADD 2" << std :: endl; //R2 = a + b
+                    pomp(0,$3->addr); //R0 = b.addr;
+                    pomp(1,$1->val); // R1 = memRO + a = b + a;
+                    std :: cout << "ADD 1" << std :: endl; //R2 = a + b
                 }
                 // dwie stale
                 if(!$1->isNum && !$3->isNum){
-                    pomp(0,$3->addr); //R0 = a.addr;
-                    std :: cout << "LOAD 2" << std :: endl; // R2 = a;
+                    pomp(0,$1->addr); //R0 = a.addr;
+                    std :: cout << "LOAD 1" << std :: endl; // R1 = a;
                     std :: cout << "ZERO 0" << std :: endl; // R0 = 0;
-                    pomp(0,$1->addr); // R0 = b.addr;
-                    std :: cout << "LOAD 3" << std :: endl; // R2 = a;
-                    std :: cout << "COPY 3" << std :: endl; // R0 = a;
+                    pomp(0,$2->addr); // R0 = b.addr;
                     std :: cout << "ADD 2" << std :: endl; //R2 = a + memR0 = a + b
                 }
             }
@@ -300,33 +294,29 @@ expr:
             }
             // stala i stala
         if($1->isNum && $3->isNum)
-            pomp(2, $1->val - $3->val);
+            pomp(2, MAX(0,$1->val - $3->val));
         else{
             // zmienna i stala
             if(!$1->isNum && $3->isNum){
                 pomp(0,$1->addr); //R0 = a.addr;
-                std :: cout << "LOAD 2" << std :: endl; // R2 = a;
-                std :: cout << "ZERO 0" << std :: endl; // R0 = 0;
-                pomp(0,$3->val); // R0 = b;
-                std :: cout << "SUB 2" << std :: endl; //R2 = a + b
+                std :: cout << "LOAD 1" << std :: endl; // R2 = a;
+                pomp(2,$3->val); // R0 = b;
+                pomp(0,address + 1);
+                std :: cout << "STORE 2" << std :: endl;
+                std :: cout << "SUB 1" << std :: endl; //R2 = a + b
             }
             // stala i zmienna
             if($1->isNum && !$3->isNum){
                 pomp(0,$3->addr); //R0 = a.addr;
-                std :: cout << "LOAD 2" << std :: endl; // R2 = a;
-                std :: cout << "ZERO 0" << std :: endl; // R0 = 0;
-                pomp(0,$1->val); // R0 = b;
-                std :: cout << "SUB 2" << std :: endl; //R2 = a + b
+                pomp(1,$1->val); // R0 = b;
+                std :: cout << "SUB 1" << std :: endl; //R2 = a + b
             }
             // dwie stale
             if(!$1->isNum && !$3->isNum){
-                pomp(0,$3->addr); //R0 = a.addr;
-                std :: cout << "LOAD 2" << std :: endl; // R2 = a;
-                std :: cout << "ZERO 0" << std :: endl; // R0 = 0;
-                pomp(0,$1->addr); // R0 = b.addr;
-                std :: cout << "LOAD 3" << std :: endl; // R2 = a;
-                std :: cout << "COPY 3" << std :: endl; // R0 = a;
-                std :: cout << "SUB 2" << std :: endl; //R2 = a + memR0 = a + b
+                pomp(0,$1->addr); //R0 = a.addr;
+                std :: cout << "LOAD 1" << std :: endl; // R2 = a;
+                pomp(0,$3->addr); // R0 = b.addr;
+                std :: cout << "SUB 1" << std :: endl; //R2 = a + memR0 = a + b
             }
     }
 	| value '*' value  { // Wedlug mnie powinno dzialac. To obmyslilem w nocy

@@ -263,13 +263,12 @@ expr:
                     pomp(1,$1->val); // R1 = memRO + a = b + a;
                     std :: cout << "ADD 1" << std :: endl; //R2 = a + b
                 }
-                // dwie stale
+                // dwie zmienne
                 if(!$1->isNum && !$3->isNum){
                     pomp(0,$1->addr); //R0 = a.addr;
                     std :: cout << "LOAD 1" << std :: endl; // R1 = a;
-                    std :: cout << "ZERO 0" << std :: endl; // R0 = 0;
                     pomp(0,$2->addr); // R0 = b.addr;
-                    std :: cout << "ADD 2" << std :: endl; //R2 = a + memR0 = a + b
+                    std :: cout << "ADD 1" << std :: endl; //R2 = a + memR0 = a + b
                 }
             }
     }
@@ -294,7 +293,10 @@ expr:
             }
             // stala i stala
         if($1->isNum && $3->isNum)
-            pomp(2, MAX(0,$1->val - $3->val));
+            if($3->val > %1->val)
+                pomp(2,0);
+            else
+                pomp(2, MAX(0,$1->val - $3->val));
         else{
             // zmienna i stala
             if(!$1->isNum && $3->isNum){
@@ -339,48 +341,27 @@ expr:
             }
         }
 
-        /*//  Zeruje na wszelki wypadek
-        std :: cout << "ZERO 2" << std :: endl;
-        std :: cout << "ZERO 3" << std :: endl;
-        std :: cout << "ZERO 4" << std :: endl;
-        pomp(2,$1->val); //a
-        pomp(3,$3->val); //b
-
-
-        int a = $3->val;
-
-        // 5 * 7 = 5 + 5 * 6 = 5 + 10 * 3 = 5 + 10 + 10 * 2 = 20 + 5 + 10 = 35
-        // 3 * 11 = 3 + 3 * 10 = 3 + 6 * 5 = 3 + 6 + 6 * 4 = 3 + 6 + 12 * 2 = 3 + 6 + 24 = 33
-        while( a > 1){
-            if(a % 2 == 0){
-                // czym sie rozni Pr0 od R0 - COPY R2 czy STORE R2
-                std :: cout << "SHR 3" << std :: endl;
-                std :: cout << "SHL 2" << std :: endl;
-                a = a/2;
-            }
-            else{
-                std :: cout << "COPY 2" << std :: endl;
-                std :: cout << "ADD 4" << std :: endl;
-                std :: cout << "DEC 3" << std :: endl;
-                // teraz mnoznik-b jest juz parzysty wiec jak w pierwszym przypadku
-                std :: cout << "SHR 3" << std :: endl;
-                std :: cout << "SHL 2" << std :: endl;
-                a -= 1;
-            }
-        }
-        // Dodaj wszystkie czynniki wolne ktore sumowalismy w ELSE
-        std :: cout << "COPY 4" << std :: endl;
-        // Wynik w R2 - bo nie bylem pewien z konwencja gdzie go wrzucic.
-        std :: cout << "ADD 2" << std :: endl;*/
-
         // Czysty assembler
         //  Zeruje na wszelki wypadek
+        std :: cout << "ZERO 1" << std :: endl;
         std :: cout << "ZERO 2" << std :: endl;
         std :: cout << "ZERO 3" << std :: endl;
         std :: cout << "ZERO 4" << std :: endl;
-        pomp(1,$1->val); //a
-        pomp(2,$3->val); //b
-        pomp(3,$3->val); //b do operacji
+        if($1->isNum)
+            pomp(1,$1->val); //a
+        else{
+            pomp(0,$1->addr);
+            std :: cout << "LOAD 1" << std :: endl;
+        }
+        if($2->isNum){
+            pomp(2,$3->val); //a
+            pomp(3,$3->val); //a
+        }
+        else{
+            pomp(0,$1->addr);
+            std :: cout << "LOAD 2" << std :: endl;
+            std :: cout << "LOAD 3" << std :: endl;
+        }
 
 
 //////////  while a > 1
@@ -435,8 +416,29 @@ expr:
                 exit(1);
             }
         }
+        // Czysty assembler
+        //  Zeruje na wszelki wypadek
+        std :: cout << "ZERO 1" << std :: endl;
+        std :: cout << "ZERO 2" << std :: endl;
+        std :: cout << "ZERO 3" << std :: endl;
+        std :: cout << "ZERO 4" << std :: endl;
+        if($1->isNum)
+            pomp(1,$1->val); //a
+        else{
+            pomp(0,$1->addr);
+            std :: cout << "LOAD 1" << std :: endl;
+        }
+        if($2->isNum){
+            pomp(2,$3->val); //a
+            pomp(3,$3->val); //a
+        }
+        else{
+            pomp(0,$1->addr);
+            std :: cout << "LOAD 2" << std :: endl;
+            std :: cout << "LOAD 3" << std :: endl;
+        }
 
-
+        //  Zaladowane wiec dzielimy
 
 
 
@@ -801,4 +803,30 @@ void pomp(int numRegister, uint64_t val)
 
     if(GET_BIT(val, i))
         std :: cout << "INC " << numRegister << std :: endl;
+}
+
+void pomp_addr(int numRegister, unit64_t addr){
+    if()
+    int i;
+
+    std :: cout << "ZERO " << numRegister << std :: endl;
+
+    for(i = (sizeof(uint64_t) * 8) - 1; i > 0; --i)
+        if(GET_BIT(val , i) )
+            break;
+
+    for(; i > 0; --i)
+        if( GET_BIT(val , i) )
+        {
+            std :: cout << "INC " << numRegister << std :: endl;
+            std :: cout << "SHL " << numRegister << std :: endl;
+        }
+        else
+        {
+            std :: cout << "SHL " << numRegister << std :: endl;
+        }
+
+    if(GET_BIT(val, i))
+        std :: cout << "INC " << numRegister << std :: endl;
+
 }

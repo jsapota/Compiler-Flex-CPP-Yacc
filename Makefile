@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -pedantic -O3
+CXXFLAGS = -std=c++11 -Wall -pedantic -O3 -lcln
 LEX = flex
 YAC = bison
 
@@ -41,7 +41,7 @@ interpreter-cln.out: ./external/interpreter-cln.cc
 	$(CXX) $(CXXFLAGS) $< -lcln -o $@
 
 test.out: ./tests/test.cpp
-	$(CXX) $(CXXFLAGS) $< -o $@ -I$(IDIR) && ./test.out 
+	$(CXX) $(CXXFLAGS) $< -o $@ -I$(IDIR) && ./test.out
 
 clean:
 	rm -rf $(ODIR)/*

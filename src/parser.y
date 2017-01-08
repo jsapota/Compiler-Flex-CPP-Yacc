@@ -3,15 +3,14 @@
 #include <common.h>
 int yylex(void);
 void yyerror(const char *msg);
-static uint64_t address = 0;
+//cln :: cl_I address = 0;
+int address = 0;
 static int label = 0;
 
-inline void variable_copy(Variable &dst, Variable const &src);
 inline void pomp(int numRegister, uint64_t val);
-inline void pomp_addr(int numRegister,Variable const &var);
 /* 0 iff ikty bit w n = 0, else 1 */
 #define GET_BIT(n , k) ( ((n) & (1ull << k)) >> k )
-
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
 %}
 
 /* we need own struct so define it before use in union */
@@ -32,6 +31,7 @@ inline void pomp_addr(int numRegister,Variable const &var);
         std :: string name;
 
         int reg;
+        //cln :: cl_I addr;
         int addr;
         int len;
 
@@ -47,7 +47,7 @@ inline void pomp_addr(int numRegister,Variable const &var);
         struct Variable *varOffset; /*  t[b] := a + c  varOffset = ptr --> b*/
 
     }Variable;
-
+    void inline pomp_addr(int numRegister, Variable const &var);
     void inline variable_copy(Variable &dst, Variable const &src);
     void variable_load(Variable const &var, int numRegister);
     static std :: map<std :: string, Variable> variables;
@@ -169,7 +169,7 @@ command:
     {
         if($1->array) {
             if($1->varOffset == NULL){
-                pomp_addr(0,$1); //////////////////////////////// pomp_addr
+                pomp_addr(0,*$1); // pomp_addr
                 //pomp(0,$1->addr + $1->offset);
             }
             else
@@ -178,7 +178,7 @@ command:
             }
         }
         else
-            pomp_addr(0,$1); //////////////////////////////// pomp_addr
+            pomp_addr(0,*$1); // pomp_addr
 
         std :: cout << "STORE" << " 1" << std :: endl;
 
@@ -196,7 +196,7 @@ command:
     {
         if($2->array) {
             if($2->varOffset == NULL){
-                pomp_addr(0,$2); //////////////////////////////// pomp_addr
+                pomp_addr(0,*$2); // pomp_addr
                 //pomp(0,$2->addr + $2->offset);
             }
             else
@@ -205,7 +205,7 @@ command:
             }
         }
         else
-            pomp_addr(0,$2); //////////////////////////////// pomp_addr
+            pomp_addr(0,*$2); // pomp_addr
 
         std :: cout << "LOAD" << " 1" << std :: endl;
         std :: cout << "PUT " << " 1" << std :: endl;
@@ -223,7 +223,7 @@ expr:
             else{
                 if($1->array) {
                     if($1->varOffset == NULL){
-                        pomp_addr(0,$1); //////////////////////////////// pomp_addr
+                        pomp_addr(0,*$1); // pomp_addr
                         //pomp(0,$1->addr + $1->offset);
                     }
                     else
@@ -232,7 +232,7 @@ expr:
                     }
                 }
                 else
-                    pomp_addr(0,$1); //////////////////////////////// pomp_addr
+                    pomp_addr(0,*$1); // pomp_addr
                 std :: cout << "LOAD" << " 1" << std :: endl;
             }
     }
@@ -262,21 +262,21 @@ expr:
             else{
                 // zmienna i stala
                 if(!$1->isNum && $3->isNum){
-                    pomp_addr(0,$1); //R0 = a.addr; //////////////////////////////// pomp_addr
+                    pomp_addr(0,*$1); //R0 = a.addr;
                     pomp(1,$3->val); // R1 = b;
                     std :: cout << "ADD 1" << std :: endl; //R1 = memRO + b = a + b
                 }
                 // stala i zmienna
                 if($1->isNum && !$3->isNum){
-                    pomp_addr(0,$3); //R0 = b.addr; //////////////////////////////// pomp_addr
+                    pomp_addr(0,*$3); //R0 = b.addr;
                     pomp(1,$1->val); // R1 = memRO + a = b + a;
                     std :: cout << "ADD 1" << std :: endl; //R2 = a + b
                 }
                 // dwie zmienne
                 if(!$1->isNum && !$3->isNum){
-                    pomp_addr(0,$1); //R0 = a.addr; //////////////////////////////// pomp_addr
+                    pomp_addr(0,*$1); //R0 = a.addr;
                     std :: cout << "LOAD 1" << std :: endl; // R1 = a;
-                    pomp_addr(0,$2); // R0 = b.addr; //////////////////////////////// pomp_addr
+                    pomp_addr(0,*$3); // R0 = b.addr;
                     std :: cout << "ADD 1" << std :: endl; //R2 = a + memR0 = a + b
                 }
             }
@@ -302,14 +302,14 @@ expr:
             }
             // stala i stala
         if($1->isNum && $3->isNum)
-            if($3->val > %1->val)
+            if($3->val > $1->val)
                 pomp(2,0);
             else
                 pomp(2, MAX(0,$1->val - $3->val));
         else{
             // zmienna i stala
             if(!$1->isNum && $3->isNum){
-                pomp_addr(0,$1); //R0 = a.addr; //////////////////////////////// pomp_addr
+                pomp_addr(0,*$1); //R0 = a.addr;
                 std :: cout << "LOAD 1" << std :: endl; // R2 = a;
                 pomp(2,$3->val); // R0 = b;
                 pomp(0,address + 1);
@@ -318,17 +318,18 @@ expr:
             }
             // stala i zmienna
             if($1->isNum && !$3->isNum){
-                pomp_addr(0,$3); //R0 = a.addr; //////////////////////////////// pomp_addr
+                pomp_addr(0,*$3); //R0 = a.addr;
                 pomp(1,$1->val); // R0 = b;
                 std :: cout << "SUB 1" << std :: endl; //R2 = a + b
             }
             // dwie stale
             if(!$1->isNum && !$3->isNum){
-                pomp_addr(0,$1); //R0 = a.addr; //////////////////////////////// pomp_addr
+                pomp_addr(0,*$1); //R0 = a.addr;
                 std :: cout << "LOAD 1" << std :: endl; // R2 = a;
-                pomp_addr(0,$3); // R0 = b.addr; //////////////////////////////// pomp_addr
+                pomp_addr(0,*$3); // R0 = b.addr;
                 std :: cout << "SUB 1" << std :: endl; //R2 = a + memR0 = a + b
             }
+        }
     }
 	| value '*' value  { // Wedlug mnie powinno dzialac. To obmyslilem w nocy
         printf("[BISON]MULTI\n");
@@ -354,15 +355,15 @@ expr:
         if($1->isNum)
             pomp(1,$1->val); //a
         else{
-            pomp_addr(0,$1); //////////////////////////////// pomp_addr
+            pomp_addr(0,*$1);
             std :: cout << "LOAD 1" << std :: endl;
         }
-        if($2->isNum){
+        if($3->isNum){
             pomp(2,$3->val); //a
             pomp(3,$3->val); //a
         }
         else{
-            pomp_addr(0,$1); //////////////////////////////// pomp_addr
+            pomp_addr(0,*$3);
             std :: cout << "LOAD 2" << std :: endl;
             std :: cout << "LOAD 3" << std :: endl;
         }
@@ -424,15 +425,15 @@ expr:
         if($1->isNum)
             pomp(1,$1->val); //a
         else{
-            pomp_addr(0,$1); //////////////////////////////// pomp_addr
+            pomp_addr(0,*$1);
             std :: cout << "LOAD 1" << std :: endl;
         }
-        if($2->isNum){
-            pomp(2,$3->val); //a
-            pomp(3,$3->val); //a
+        if($3->isNum){
+            pomp(2,$3->val); //b
+            pomp(3,$3->val); //b
         }
         else{
-            pomp_addr(0,$1); //////////////////////////////// pomp_addr
+            pomp_addr(0,*$3);
             std :: cout << "LOAD 2" << std :: endl;
             std :: cout << "LOAD 3" << std :: endl;
         }
@@ -474,15 +475,15 @@ expr:
             if($1->isNum)
                 pomp(1,$1->val); //a
             else{
-                pomp_addr(0,$1); //////////////////////////////// pomp_addr
+                pomp_addr(0,*$1);
                 std :: cout << "LOAD 1" << std :: endl;
             }
-            if($2->isNum){
-                pomp(2,$3->val); //a
-                pomp(3,$3->val); //a
+            if($3->isNum){
+                pomp(2,$3->val); //b
+                pomp(3,$3->val); //b
             }
             else{
-                pomp_addr(0,$1); //////////////////////////////// pomp_addr
+                pomp_addr(0,*$3);
                 std :: cout << "LOAD 2" << std :: endl;
                 std :: cout << "LOAD 3" << std :: endl;
             }
@@ -511,9 +512,22 @@ cond:
 	value '=' value       { printf("[BISON]EQUAL\n");
 
         // Napomuj R2 = a, R3 = a, R4 = b
-        pomp(2,$1->val); //a
-        pomp(3,$1->val); //a
-        pomp(4,$3->val); //b
+        if($1->isNum){
+            pomp(2,$1->val); //a
+            pomp(3,$1->val); //a
+        }
+        else{
+            pomp_addr(0,*$1);
+            std :: cout << "LOAD 2" << std :: endl;
+            std :: cout << "LOAD 3" << std :: endl;
+        }
+        if($3->isNum){
+            pomp(4,$3->val); //b
+        }
+        else{
+            pomp_addr(0,*$3);
+            std :: cout << "LOAD 4" << std :: endl;
+        }
 
         //Czy b <= a
         std :: cout << "COPY" << " 4" << std :: endl;       // b-> R0
@@ -543,15 +557,29 @@ cond:
         printf("[BISON]NE\n");
         // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
         // Napomuj R2 = a, R3 = a, R4 = b
-        pomp(2,$1->val); //a
-        pomp(3,$1->val); //a
-        pomp(4,$3->val); //b
+        if($1->isNum){
+            pomp(2,$1->val); //a
+            pomp(3,$1->val); //a
+        }
+        else{
+            pomp_addr(0,*$1);
+            std :: cout << "LOAD 2" << std :: endl;
+            std :: cout << "LOAD 3" << std :: endl;
+        }
+        if($3->isNum){
+            pomp(4,$3->val); //b
+        }
+        else{
+            pomp_addr(0,*$3);
+            std :: cout << "LOAD 4" << std :: endl;
+        }
 
         //Czy b => a
         std :: cout << "COPY" << " 4" << std :: endl;       // b-> R0
         std :: cout << "SUB" << " 2" << std :: endl;        // R2 = a - b
         std :: cout << "JZERO 2" << " ET" << label++ << std :: endl; // b > a lub b == a
-        std :: cout << "JUMP ET" << label += 2 << std :: endl; //  a-b > 0 to mamy nierownosc wiec skocz do ET3 - TRUE
+        label += 2;
+        std :: cout << "JUMP ET" << label << std :: endl; //  a-b > 0 to mamy nierownosc wiec skocz do ET3 - TRUE
 
         // ET1 wiec b >= a
         //CZY a == b?
@@ -570,8 +598,21 @@ cond:
     {
         // a < b lub a + 1 <= b
         printf("[BISON]LT\n");
-        pomp(2,$1->val); //a
-        pomp(3,$3->val); //b
+        //R2 = a R3 = b
+        if($1->isNum){
+            pomp(2,$1->val); //a
+        }
+        else{
+            pomp_addr(0,*$1);
+            std :: cout << "LOAD 2" << std :: endl;
+        }
+        if($3->isNum){
+            pomp(3,$3->val); //b
+        }
+        else{
+            pomp_addr(0,*$3);
+            std :: cout << "LOAD 3" << std :: endl;
+        }
         std :: cout << "COPY 3" << std :: endl;     //R0 = b
         std :: cout << "INC 2" << std :: endl;
         std :: cout << "SUB 2" << std :: endl;      //R2 = a + 1 - b = R2 - memR0 = 0
@@ -592,8 +633,20 @@ cond:
     {
         // a > b lub a >= b + 1
         printf("[BISON]GT\n");
-        pomp(2,$1->val); //a
-        pomp(3,$3->val); //b
+        if($1->isNum){
+            pomp(2,$1->val); //a
+        }
+        else{
+            pomp_addr(0,*$1);
+            std :: cout << "LOAD 2" << std :: endl;
+        }
+        if($3->isNum){
+            pomp(3,$3->val); //b
+        }
+        else{
+            pomp_addr(0,*$3);
+            std :: cout << "LOAD 3" << std :: endl;
+        }
         // a >= b
         // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
         std :: cout << "COPY 2" << std :: endl; //R0 = a
@@ -616,8 +669,20 @@ cond:
     {
         // a <= b
         printf("[BISON]LE\n");
-        pomp(2,$1->val); //a
-        pomp(3,$3->val); //b
+        if($1->isNum){
+            pomp(2,$1->val); //a
+        }
+        else{
+            pomp_addr(0,*$1);
+            std :: cout << "LOAD 2" << std :: endl;
+        }
+        if($3->isNum){
+            pomp(3,$3->val); //a
+        }
+        else{
+            pomp_addr(0,*$3);
+            std :: cout << "LOAD 3" << std :: endl;
+        }
         std :: cout << "COPY 3" << std :: endl;     //R0 = b
         std :: cout << "SUB 2" << std :: endl;      //R2 = a - b = R2 - memR0
         std :: cout << "JZERO 2 ET" << label++ << std :: endl;      //Jezeli R2 == 0 to mamy spelniony warunek
@@ -639,8 +704,20 @@ cond:
     {
 
         printf("[BISON]GE\n");
-        pomp(2,$1->val); //a
-        pomp(3,$3->val); //b
+        if($1->isNum){
+            pomp(2,$1->val); //a
+        }
+        else{
+            pomp_addr(0,*$1);
+            std :: cout << "LOAD 2" << std :: endl;
+        }
+        if($3->isNum){
+            pomp(3,$3->val); //a
+        }
+        else{
+            pomp_addr(0,*$3);
+            std :: cout << "LOAD 3" << std :: endl;
+        }
         // a >= b
         // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
         std :: cout << "COPY 2" << std :: endl; //R0 = a
@@ -822,21 +899,40 @@ inline void pomp(int numRegister, uint64_t val)
 }
 
 inline void pomp_addr(int numRegister,Variable const &var){
-    if(!var->array)
-        pomp(numRegister, var->addr);
+    if(!var.array)
+        pomp(numRegister, var.addr);
     else
-        if ( variable->var_offset == NULL )
-            pomp(reg, variable->addr + variable->offset)
+        if ( var.var_offset == NULL )
+            pomp(numRegister, var.addr + var.offset);
         else{
-            pomp(1,var->addr);
-            pomp(0.var->var_offset->addr);
+            pomp(1,var.addr);
+            pomp(0,var.var_offset.addr); // has no member named var_offset
             std :: cout << "ADD 1" << std :: endl;
             std :: cout << "COPY 0"  << std :: endl;
         }
 }
 
 
-inline void pompBigValue(int numRegister,BigInt value){
+inline void pompBigValue(int numRegister,cln :: cl_I value){
+    int i;
 
+    std :: cout << "ZERO " << numRegister << std :: endl;
 
+    for(i = (sizeof(cln :: cl_I) * 8) - 1; i > 0; --i)
+        if(GET_BIT(value , i) )
+            break;
+
+    for(; i > 0; --i)
+        if( GET_BIT(value , i) )
+        {
+            std :: cout << "INC " << numRegister << std :: endl;
+            std :: cout << "SHL " << numRegister << std :: endl;
+        }
+        else
+        {
+            std :: cout << "SHL " << numRegister << std :: endl;
+        }
+
+    if(GET_BIT(value, i))
+        std :: cout << "INC " << numRegister << std :: endl;
 }

@@ -9,7 +9,8 @@ static int label = 0;
 
 inline void pomp(int numRegister, uint64_t val);
 /* 0 iff ikty bit w n = 0, else 1 */
-#define GET_BIT(n , k) ( ((n) & (1ull << k)) >> k )
+#define GET_BIT(n , k)      (((n) & (1ull << k)) >> k )
+#define GET_BIGBIT(n, k)    ((cln :: oddp(n >> k)))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 %}
 
@@ -488,7 +489,7 @@ expr:
                 std :: cout << "LOAD 3" << std :: endl;
             }
 
-            //  Zaladowane wiec dzielimy
+            //  Zaladowane wiec mod
 
 
 
@@ -902,11 +903,11 @@ inline void pomp_addr(int numRegister,Variable const &var){
     if(!var.array)
         pomp(numRegister, var.addr);
     else
-        if ( var.var_offset == NULL )
+        if ( var.varOffset == NULL )
             pomp(numRegister, var.addr + var.offset);
         else{
             pomp(1,var.addr);
-            pomp(0,var.var_offset.addr); // has no member named var_offset
+            pomp(0,var.varOffset->addr); // has no member named var_offset
             std :: cout << "ADD 1" << std :: endl;
             std :: cout << "COPY 0"  << std :: endl;
         }
@@ -914,16 +915,16 @@ inline void pomp_addr(int numRegister,Variable const &var){
 
 
 inline void pompBigValue(int numRegister,cln :: cl_I value){
-    int i;
-
+    cln :: cl_I i;
     std :: cout << "ZERO " << numRegister << std :: endl;
 
-    for(i = (sizeof(cln :: cl_I) * 8) - 1; i > 0; --i)
-        if(GET_BIT(value , i) )
+    for(i = sizeof(cln :: cl_I); i > 0; --i){
+        if(GET_BIGBIT(value , i))
             break;
+    }
 
     for(; i > 0; --i)
-        if( GET_BIT(value , i) )
+        if(GET_BIGBIT(value , i))
         {
             std :: cout << "INC " << numRegister << std :: endl;
             std :: cout << "SHL " << numRegister << std :: endl;
@@ -933,6 +934,6 @@ inline void pompBigValue(int numRegister,cln :: cl_I value){
             std :: cout << "SHL " << numRegister << std :: endl;
         }
 
-    if(GET_BIT(value, i))
+    if(GET_BIGBIT(value, i))
         std :: cout << "INC " << numRegister << std :: endl;
 }

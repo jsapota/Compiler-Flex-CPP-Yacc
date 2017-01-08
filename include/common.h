@@ -8,7 +8,4 @@
 #include <cstring> /* SSE */
 #include <string> /* string */
 #include <cln/integer.h>
-#include <cln/object.h>
-#include <cln/number.h>
-#include <math.h>
 #endif

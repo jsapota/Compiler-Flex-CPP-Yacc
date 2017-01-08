@@ -7,5 +7,6 @@
 #include <stdint.h> /* intX_t */
 #include <cstring> /* SSE */
 #include <string> /* string */
+#include <cln.h>
 
 #endif

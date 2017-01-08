@@ -5,8 +5,10 @@ int yylex(void);
 void yyerror(const char *msg);
 static uint64_t address = 0;
 static int label = 0;
-void pomp(int numRegister, uint64_t val);
 
+inline void variable_copy(Variable &dst, Variable const &src);
+inline void pomp(int numRegister, uint64_t val);
+inline void pomp_addr(int numRegister,Variable const &var);
 /* 0 iff ikty bit w n = 0, else 1 */
 #define GET_BIT(n , k) ( ((n) & (1ull << k)) >> k )
 
@@ -166,15 +168,17 @@ command:
 	identifier ASSIGN expr ';'
     {
         if($1->array) {
-            if($1->varOffset == NULL)
-                pomp(0,$1->addr + $1->offset);
+            if($1->varOffset == NULL){
+                pomp_addr(0,$1); //////////////////////////////// pomp_addr
+                //pomp(0,$1->addr + $1->offset);
+            }
             else
             {
                 /* zablokowane przez dodawanie */
             }
         }
         else
-            pomp(0,$1->addr);
+            pomp_addr(0,$1); //////////////////////////////// pomp_addr
 
         std :: cout << "STORE" << " 1" << std :: endl;
 
@@ -191,15 +195,17 @@ command:
 	| WRITE value ';'
     {
         if($2->array) {
-            if($2->varOffset == NULL)
-                pomp(0,$2->addr + $2->offset);
+            if($2->varOffset == NULL){
+                pomp_addr(0,$2); //////////////////////////////// pomp_addr
+                //pomp(0,$2->addr + $2->offset);
+            }
             else
             {
                 /* zablokowane przez dodawanie */
             }
         }
         else
-            pomp(0,$2->addr);
+            pomp_addr(0,$2); //////////////////////////////// pomp_addr
 
         std :: cout << "LOAD" << " 1" << std :: endl;
         std :: cout << "PUT " << " 1" << std :: endl;
@@ -216,15 +222,17 @@ expr:
             }
             else{
                 if($1->array) {
-                    if($1->varOffset == NULL)
-                        pomp(0,$1->addr + $1->offset);
+                    if($1->varOffset == NULL){
+                        pomp_addr(0,$1); //////////////////////////////// pomp_addr
+                        //pomp(0,$1->addr + $1->offset);
+                    }
                     else
                     {
                         /* zablokowane przez dodawanie */
                     }
                 }
                 else
-                    pomp(0,$1->addr);
+                    pomp_addr(0,$1); //////////////////////////////// pomp_addr
                 std :: cout << "LOAD" << " 1" << std :: endl;
             }
     }
@@ -248,26 +256,27 @@ expr:
                 }
             }
                 // stala i stala
-            if($1->isNum && $3->isNum)
-                pomp(2, $1->val + $3->val);
+            if($1->isNum && $3->isNum){
+                    pomp(2, $1->val + $3->val);
+            }
             else{
                 // zmienna i stala
                 if(!$1->isNum && $3->isNum){
-                    pomp(0,$1->addr); //R0 = a.addr;
+                    pomp_addr(0,$1); //R0 = a.addr; //////////////////////////////// pomp_addr
                     pomp(1,$3->val); // R1 = b;
                     std :: cout << "ADD 1" << std :: endl; //R1 = memRO + b = a + b
                 }
                 // stala i zmienna
                 if($1->isNum && !$3->isNum){
-                    pomp(0,$3->addr); //R0 = b.addr;
+                    pomp_addr(0,$3); //R0 = b.addr; //////////////////////////////// pomp_addr
                     pomp(1,$1->val); // R1 = memRO + a = b + a;
                     std :: cout << "ADD 1" << std :: endl; //R2 = a + b
                 }
                 // dwie zmienne
                 if(!$1->isNum && !$3->isNum){
-                    pomp(0,$1->addr); //R0 = a.addr;
+                    pomp_addr(0,$1); //R0 = a.addr; //////////////////////////////// pomp_addr
                     std :: cout << "LOAD 1" << std :: endl; // R1 = a;
-                    pomp(0,$2->addr); // R0 = b.addr;
+                    pomp_addr(0,$2); // R0 = b.addr; //////////////////////////////// pomp_addr
                     std :: cout << "ADD 1" << std :: endl; //R2 = a + memR0 = a + b
                 }
             }
@@ -300,7 +309,7 @@ expr:
         else{
             // zmienna i stala
             if(!$1->isNum && $3->isNum){
-                pomp(0,$1->addr); //R0 = a.addr;
+                pomp_addr(0,$1); //R0 = a.addr; //////////////////////////////// pomp_addr
                 std :: cout << "LOAD 1" << std :: endl; // R2 = a;
                 pomp(2,$3->val); // R0 = b;
                 pomp(0,address + 1);
@@ -309,15 +318,15 @@ expr:
             }
             // stala i zmienna
             if($1->isNum && !$3->isNum){
-                pomp(0,$3->addr); //R0 = a.addr;
+                pomp_addr(0,$3); //R0 = a.addr; //////////////////////////////// pomp_addr
                 pomp(1,$1->val); // R0 = b;
                 std :: cout << "SUB 1" << std :: endl; //R2 = a + b
             }
             // dwie stale
             if(!$1->isNum && !$3->isNum){
-                pomp(0,$1->addr); //R0 = a.addr;
+                pomp_addr(0,$1); //R0 = a.addr; //////////////////////////////// pomp_addr
                 std :: cout << "LOAD 1" << std :: endl; // R2 = a;
-                pomp(0,$3->addr); // R0 = b.addr;
+                pomp_addr(0,$3); // R0 = b.addr; //////////////////////////////// pomp_addr
                 std :: cout << "SUB 1" << std :: endl; //R2 = a + memR0 = a + b
             }
     }
@@ -342,15 +351,10 @@ expr:
         }
 
         // Czysty assembler
-        //  Zeruje na wszelki wypadek
-        std :: cout << "ZERO 1" << std :: endl;
-        std :: cout << "ZERO 2" << std :: endl;
-        std :: cout << "ZERO 3" << std :: endl;
-        std :: cout << "ZERO 4" << std :: endl;
         if($1->isNum)
             pomp(1,$1->val); //a
         else{
-            pomp(0,$1->addr);
+            pomp_addr(0,$1); //////////////////////////////// pomp_addr
             std :: cout << "LOAD 1" << std :: endl;
         }
         if($2->isNum){
@@ -358,7 +362,7 @@ expr:
             pomp(3,$3->val); //a
         }
         else{
-            pomp(0,$1->addr);
+            pomp_addr(0,$1); //////////////////////////////// pomp_addr
             std :: cout << "LOAD 2" << std :: endl;
             std :: cout << "LOAD 3" << std :: endl;
         }
@@ -417,15 +421,10 @@ expr:
             }
         }
         // Czysty assembler
-        //  Zeruje na wszelki wypadek
-        std :: cout << "ZERO 1" << std :: endl;
-        std :: cout << "ZERO 2" << std :: endl;
-        std :: cout << "ZERO 3" << std :: endl;
-        std :: cout << "ZERO 4" << std :: endl;
         if($1->isNum)
             pomp(1,$1->val); //a
         else{
-            pomp(0,$1->addr);
+            pomp_addr(0,$1); //////////////////////////////// pomp_addr
             std :: cout << "LOAD 1" << std :: endl;
         }
         if($2->isNum){
@@ -433,7 +432,7 @@ expr:
             pomp(3,$3->val); //a
         }
         else{
-            pomp(0,$1->addr);
+            pomp_addr(0,$1); //////////////////////////////// pomp_addr
             std :: cout << "LOAD 2" << std :: endl;
             std :: cout << "LOAD 3" << std :: endl;
         }
@@ -471,7 +470,24 @@ expr:
                     exit(1);
                 }
             }
+            // Czysty assembler
+            if($1->isNum)
+                pomp(1,$1->val); //a
+            else{
+                pomp_addr(0,$1); //////////////////////////////// pomp_addr
+                std :: cout << "LOAD 1" << std :: endl;
+            }
+            if($2->isNum){
+                pomp(2,$3->val); //a
+                pomp(3,$3->val); //a
+            }
+            else{
+                pomp_addr(0,$1); //////////////////////////////// pomp_addr
+                std :: cout << "LOAD 2" << std :: endl;
+                std :: cout << "LOAD 3" << std :: endl;
+            }
 
+            //  Zaladowane wiec dzielimy
 
 
 
@@ -780,7 +796,7 @@ inline void variable_copy(Variable &dst, Variable const &src)
         dst.varOffset = src.varOffset;
 }
 
-void pomp(int numRegister, uint64_t val)
+inline void pomp(int numRegister, uint64_t val)
 {
     int i;
 
@@ -805,28 +821,22 @@ void pomp(int numRegister, uint64_t val)
         std :: cout << "INC " << numRegister << std :: endl;
 }
 
-void pomp_addr(int numRegister, unit64_t addr){
-    if()
-    int i;
-
-    std :: cout << "ZERO " << numRegister << std :: endl;
-
-    for(i = (sizeof(uint64_t) * 8) - 1; i > 0; --i)
-        if(GET_BIT(val , i) )
-            break;
-
-    for(; i > 0; --i)
-        if( GET_BIT(val , i) )
-        {
-            std :: cout << "INC " << numRegister << std :: endl;
-            std :: cout << "SHL " << numRegister << std :: endl;
+inline void pomp_addr(int numRegister,Variable const &var){
+    if(!var->array)
+        pomp(numRegister, var->addr);
+    else
+        if ( variable->var_offset == NULL )
+            pomp(reg, variable->addr + variable->offset)
+        else{
+            pomp(1,var->addr);
+            pomp(0.var->var_offset->addr);
+            std :: cout << "ADD 1" << std :: endl;
+            std :: cout << "COPY 0"  << std :: endl;
         }
-        else
-        {
-            std :: cout << "SHL " << numRegister << std :: endl;
-        }
+}
 
-    if(GET_BIT(val, i))
-        std :: cout << "INC " << numRegister << std :: endl;
+
+inline void pompBigValue(int numRegister,BigInt value){
+
 
 }

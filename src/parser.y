@@ -530,15 +530,15 @@ cond:
         }
 
         //Czy b <= a
-        std :: cout << "COPY" << " 4" << std :: endl;       // b-> R0
-        std :: cout << "SUB" << " 2" << std :: endl;        // R2 = a - b
+        std :: cout << "STORE" << " 4" << std :: endl;       // b -> memR0
+        std :: cout << "SUB" << " 2" << std :: endl;        // R2 = a - memR0 = a - b
         std :: cout << "JZERO 2" << " ET" << label++ << std :: endl; // jezeli R2 == 0 to skocz do ET1
         std :: cout << "JUMP ET" << label++ << std :: endl; //  skocz do ET2 - FALSE
 
         // ET1 - pierwszy warunek spelniony - teraz drugi warunek
         //CZY b - a == 0 ??
-        std :: cout << "COPY" << " 2" << std :: endl;// b-> R0
-        std :: cout << "SUB" << " 3" << std :: endl;// R3 = b - a
+        std :: cout << "STORE" << " 2" << std :: endl;// a -> memR0
+        std :: cout << "SUB" << " 3" << std :: endl;// R3 = a - memR0 = a - b
         std :: cout << "JZERO 3" << " ET" << label++ << std :: endl; // jezeli R3 == 0 to skocz do ET3 czyli rownosc spelniona
         std :: cout << "JUMP ET" << label-- << std :: endl; //  // ma skoczyc do 2 a nie do 3 wiec label--
 
@@ -575,16 +575,16 @@ cond:
         }
 
         //Czy b => a
-        std :: cout << "COPY" << " 4" << std :: endl;       // b-> R0
-        std :: cout << "SUB" << " 2" << std :: endl;        // R2 = a - b
+        std :: cout << "STORE" << " 4" << std :: endl;       // b -> memR0
+        std :: cout << "SUB" << " 2" << std :: endl;        // R2 = a - memR0 = a - b
         std :: cout << "JZERO 2" << " ET" << label++ << std :: endl; // b > a lub b == a
         label += 2;
         std :: cout << "JUMP ET" << label << std :: endl; //  a-b > 0 to mamy nierownosc wiec skocz do ET3 - TRUE
 
         // ET1 wiec b >= a
         //CZY a == b?
-        std :: cout << "COPY" << " 2" << std :: endl;// a-> R0
-        std :: cout << "SUB" << " 3" << std :: endl;// R3 = b - a
+        std :: cout << "STORE" << " 2" << std :: endl;// a-> memR0
+        std :: cout << "SUB" << " 3" << std :: endl;// R3 = b - memR0 = b - a
         std :: cout << "JZERO 3" << " ET" << label--  << std :: endl; // jezeli R3 == 0 to skocz do ET2 bo FALSE
         std :: cout << "JUMP ET" << label++ << std :: endl; //  skaczemy do ET3 - mamy nierownosc
 
@@ -596,7 +596,6 @@ cond:
     }
 	| value '<' value
     {
-        // a < b lub a + 1 <= b
         printf("[BISON]LT\n");
         //R2 = a R3 = b
         if($1->isNum){
@@ -613,9 +612,10 @@ cond:
             pomp_addr(0,*$3);
             std :: cout << "LOAD 3" << std :: endl;
         }
-        std :: cout << "COPY 3" << std :: endl;     //R0 = b
-        std :: cout << "INC 2" << std :: endl;
-        std :: cout << "SUB 2" << std :: endl;      //R2 = a + 1 - b = R2 - memR0 = 0
+        // a < b lub a + 1 <= b
+        std :: cout << "STORE 3" << std :: endl;     //b -> memR0
+        std :: cout << "INC 2" << std :: endl;       //R2 + 1
+        std :: cout << "SUB 2" << std :: endl;      //R2 = R2 - memR0 = a + 1 - b = 0
         std :: cout << "JZERO 2 ET" << label ++ << std :: endl;      //Jezeli R2 == 0 to mamy spelniony warunek
         std :: cout << "JUMP ET" << label++ << std :: endl;         // Jezeli nie to skocz do ET2 - false
 
@@ -649,9 +649,9 @@ cond:
         }
         // a >= b
         // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
-        std :: cout << "COPY 2" << std :: endl; //R0 = a
+        std :: cout << "STORE 2" << std :: endl; //a -> memR0
         std :: cout << "INC 3" << std :: endl; //R3 = b + 1
-        std :: cout << "SUB 3" << std :: endl;  //R3 = b + 1 - a = R3 - memR0 = 0
+        std :: cout << "SUB 3" << std :: endl;  //R3 = R3 - memR0 = b + 1 - a  = 0
         std :: cout << "JZERO 3 ET" << label++ << std :: endl;//Jezeli R3 == 0 to mamy
         std :: cout << "JUMP ET" << label++ << std :: endl;//Jezeli nie to END FALSE
 
@@ -683,8 +683,8 @@ cond:
             pomp_addr(0,*$3);
             std :: cout << "LOAD 3" << std :: endl;
         }
-        std :: cout << "COPY 3" << std :: endl;     //R0 = b
-        std :: cout << "SUB 2" << std :: endl;      //R2 = a - b = R2 - memR0
+        std :: cout << "STORE 3" << std :: endl;     //b -> memR0
+        std :: cout << "SUB 2" << std :: endl;      //R2 = a - memR0 = a - b
         std :: cout << "JZERO 2 ET" << label++ << std :: endl;      //Jezeli R2 == 0 to mamy spelniony warunek
         std :: cout << "JUMP ET" << label++ << std :: endl;         // Jezeli nie to skocz do ET2 - false
 
@@ -720,8 +720,8 @@ cond:
         }
         // a >= b
         // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
-        std :: cout << "COPY 2" << std :: endl; //R0 = a
-        std :: cout << "SUB 3" << std :: endl;  //R3 = b - a = R3 - memR0
+        std :: cout << "STORE 2" << std :: endl; //a -> memR0
+        std :: cout << "SUB 3" << std :: endl;  //R3 = b - memR0 = b - a
         std :: cout << "JZERO 3 ET" << label++ << std :: endl;//Jezeli R3 == 0 to mamy
         std :: cout << "JUMP ET" << label++ << std :: endl;//Jezeli nie to END FALSE
 

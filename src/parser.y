@@ -2,10 +2,11 @@
 #include <common.h>
 #include <fstream>
 #include <vector>
+#include <cln/integer.h>
 int yylex(void);
 void yyerror(const char *msg);
-//cln :: cl_I address = 0;
-int address = 0;
+//zmienilem zakres addresu
+uint64_t address = 0;
 static int label = 0;
 extern FILE *yyin;
 uint64_t asmline = 0;
@@ -37,9 +38,10 @@ inline void writeAsm(std :: string const &str);
         std :: string name;
 
         int reg;
-        //cln :: cl_I addr;
-        int addr;
-        int len;
+        //zmienilem zakres addresu
+        uint64_t addr;
+        //zmienilem zakres tablicy
+        uint64_t len;
 
         bool isNum;
         bool upToDate;
@@ -150,7 +152,7 @@ vdeclar:
         var.reg = -1;
         var.addr = address;
         var.isNum = false;
-        var.len = atoll($4.str);
+        var.len = strtoll ($4.str, &$4.str, 10);
         address += var.len;
         if(var.len == 0)
         {
@@ -178,9 +180,8 @@ command:
 
         /* ustaw R0 na addr identifiera  WIEMY ZE TO VAR */
         pomp_addr(0, *$1);
-
         writeAsm("STORE 1\n");
-
+        std :: cout << "Variable len" << variables[$1->name].len << std :: endl;
         variables[$1->name].init = true;
     }
 	| IF cond THEN commands ELSE commands ENDIF

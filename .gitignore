@@ -13,3 +13,5 @@ file
 file*
 tests/*
 external/*
+test
+asm

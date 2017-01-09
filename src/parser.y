@@ -1,17 +1,28 @@
 %{
 
 #include <common.h>
+#include <fstream>
+#include <vector>
+
 int yylex(void);
 void yyerror(const char *msg);
 //cln :: cl_I address = 0;
 int address = 0;
 static int label = 0;
+extern FILE *yyin;
+
+uint64_t asmline = 0;
+
+std :: vector <std :: string> code;
 
 inline void pomp(int numRegister, uint64_t val);
 /* 0 iff ikty bit w n = 0, else 1 */
 #define GET_BIT(n , k)      (((n) & (1ull << k)) >> k )
 #define GET_BIGBIT(n, k)    ((cln :: oddp(n >> k)))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
+
+inline void writeAsm(std :: string const &str);
+
 %}
 
 /* we need own struct so define it before use in union */
@@ -82,7 +93,7 @@ program:
 	%empty
 	| VAR vdeclar _BEGIN commands END
     {
-        std :: cout << "HALT" << std :: endl;
+        writeAsm("HALT\n");
     }
 ;
 
@@ -168,22 +179,14 @@ commands:
 command:
 	identifier ASSIGN expr ';'
     {
-        if($1->array) {
-            if($1->varOffset == NULL){
-                pomp_addr(0,*$1); // pomp_addr
-                //pomp(0,$1->addr + $1->offset);
-            }
-            else
-            {
-                /* zablokowane przez dodawanie */
-            }
-        }
-        else
-            pomp_addr(0,*$1); // pomp_addr
+        /* Konwencja mowi ze wynik expr bedzie w R1  */
 
-        std :: cout << "STORE" << " 1" << std :: endl;
+        /* ustaw R0 na addr identifiera  WIEMY ZE TO VAR */
+        pomp_addr(0, *$1);
 
-        $1->init = true;
+        writeAsm("STORE 1\n");
+
+        variables[$1->name].init = true;
     }
 	| IF cond THEN commands ELSE commands ENDIF
 	| WHILE cond DO commands ENDWHILE
@@ -191,25 +194,47 @@ command:
 	| FOR VARIABLE FROM value DOWNTO value DO commands ENDFOR
 	| READ identifier ';'
     {
-        //to robi init
+        /*
+            Scenariusz:
+
+            Ladujemy do R1 wartosc
+            ustawiamy R0 na jego address
+            zapisujemy wartosc
+         */
+
+         writeAsm("GET 1\n");
+
+         pomp_addr(0, *$2);
+
+         writeAsm("STORE 1\n");
+
+         variables[$2->name].init = true;
     }
 	| WRITE value ';'
     {
-        if($2->array) {
-            if($2->varOffset == NULL){
-                pomp_addr(0,*$2); // pomp_addr
-                //pomp(0,$2->addr + $2->offset);
-            }
-            else
-            {
-                /* zablokowane przez dodawanie */
-            }
+        /*
+            Scenariusz:
+
+            1. Wypisujemy zmienna
+                ustaw w R0 addres
+                wczytaj do R1
+                wypisz R1 na stdout
+            2. Stala
+                pompuj do R1
+                wypisz R1 na stdout
+        */
+
+        if(! $2->isNum)
+        {
+            pomp_addr(0, *$2);
+            writeAsm("LOAD 1\n");
+            writeAsm("PUT 1\n");
         }
         else
-            pomp_addr(0,*$2); // pomp_addr
-
-        std :: cout << "LOAD" << " 1" << std :: endl;
-        std :: cout << "PUT " << " 1" << std :: endl;
+        {
+            pomp(1, $2->val);
+            writeAsm("PUT 1\n");
+        }
 
     }
 	| SKIP ';'
@@ -221,25 +246,13 @@ expr:
             if($1->isNum) {
                 pomp(1,$1->val);
             }
-            else{
-                if($1->array) {
-                    if($1->varOffset == NULL){
-                        pomp_addr(0,*$1); // pomp_addr
-                        //pomp(0,$1->addr + $1->offset);
-                    }
-                    else
-                    {
-                        /* zablokowane przez dodawanie */
-                    }
-                }
-                else
-                    pomp_addr(0,*$1); // pomp_addr
-                std :: cout << "LOAD" << " 1" << std :: endl;
+            else
+            {
+                pomp_addr(0, *$1);
+                writeAsm("LOAD 1\n");
             }
     }
 	| value '+' value  {
-            printf("[BISON]ADD\n");
-            std :: cout << $1->name << " + " << $3->name << std :: endl;
             if(!$1->isNum){
             auto it = variables[$1->name];
             if (!it.init)
@@ -258,6 +271,7 @@ expr:
             }
                 // stala i stala
             if($1->isNum && $3->isNum){
+                /* TODO: Zmiana na BigValue ( czyli cln a = $1->val, b = $3->val, pompBig(2, a + b)) */
                     pomp(2, $1->val + $3->val);
             }
             else{
@@ -265,26 +279,24 @@ expr:
                 if(!$1->isNum && $3->isNum){
                     pomp_addr(0,*$1); //R0 = a.addr;
                     pomp(1,$3->val); // R1 = b;
-                    std :: cout << "ADD 1" << std :: endl; //R1 = memRO + b = a + b
+                    writeAsm("ADD 1\n"); //R1 = memRO + b = a + b
                 }
                 // stala i zmienna
                 if($1->isNum && !$3->isNum){
                     pomp_addr(0,*$3); //R0 = b.addr;
                     pomp(1,$1->val); // R1 = memRO + a = b + a;
-                    std :: cout << "ADD 1" << std :: endl; //R2 = a + b
+                    writeAsm("ADD 1\n"); //R2 = a + b
                 }
                 // dwie zmienne
                 if(!$1->isNum && !$3->isNum){
                     pomp_addr(0,*$1); //R0 = a.addr;
-                    std :: cout << "LOAD 1" << std :: endl; // R1 = a;
+                    writeAsm("LOAD 1\n"); // R1 = a;
                     pomp_addr(0,*$3); // R0 = b.addr;
-                    std :: cout << "ADD 1" << std :: endl; //R2 = a + memR0 = a + b
+                    writeAsm("ADD 1\n"); //R2 = a + memR0 = a + b
                 }
             }
     }
 	| value '-' value  {
-            printf("[BISON]SUB\n");
-            std :: cout << $1->name << " - " << $3->name << std :: endl;
             if(!$1->isNum){
             auto it = variables[$1->name];
             if (!it.init)
@@ -306,35 +318,38 @@ expr:
             if($3->val > $1->val)
                 pomp(2,0);
             else
-                pomp(2, MAX(0,$1->val - $3->val));
+            {
+                if($3->val >= $1->val)
+                    pomp(2, 0ull);
+                else
+                    pomp(2, $1->val - $3->val);
+            }
         else{
             // zmienna i stala
             if(!$1->isNum && $3->isNum){
                 pomp_addr(0,*$1); //R0 = a.addr;
-                std :: cout << "LOAD 1" << std :: endl; // R2 = a;
+                writeAsm("LOAD 1\n"); // R2 = a;
                 pomp(2,$3->val); // R0 = b;
                 pomp(0,address + 1);
-                std :: cout << "STORE 2" << std :: endl;
-                std :: cout << "SUB 1" << std :: endl; //R2 = a + b
+                writeAsm("STORE 2\n");
+                writeAsm("SUB 1\n"); //R2 = a + b
             }
             // stala i zmienna
             if($1->isNum && !$3->isNum){
                 pomp_addr(0,*$3); //R0 = a.addr;
                 pomp(1,$1->val); // R0 = b;
-                std :: cout << "SUB 1" << std :: endl; //R2 = a + b
+                writeAsm("SUB 1\n"); //R2 = a + b
             }
             // dwie stale
             if(!$1->isNum && !$3->isNum){
                 pomp_addr(0,*$1); //R0 = a.addr;
-                std :: cout << "LOAD 1" << std :: endl; // R2 = a;
+                writeAsm("LOAD 1\n"); // R2 = a;
                 pomp_addr(0,*$3); // R0 = b.addr;
-                std :: cout << "SUB 1" << std :: endl; //R2 = a + memR0 = a + b
+                writeAsm("SUB 1\n"); //R2 = a + memR0 = a + b
             }
         }
     }
 	| value '*' value  { // Wedlug mnie powinno dzialac. To obmyslilem w nocy
-        printf("[BISON]MULTI\n");
-        std :: cout << $1->name << " * " << $3->name << std :: endl;
         if(!$1->isNum){
         auto it = variables[$1->name];
         if (!it.init)
@@ -404,8 +419,6 @@ expr:
 
     }
 	| value '/' value  {
-        printf("[BISON]DIV\n");
-        std :: cout << $1->name << " / " << $3->name << std :: endl;
         if(!$1->isNum){
         auto it = variables[$1->name];
         if (!it.init)
@@ -454,8 +467,6 @@ expr:
 
     }
 	| value '%' value  {
-        printf("[BISON]MOD\n");
-        std :: cout << $1->name << " %% " << $3->name << std :: endl;
             if(!$1->isNum){
             auto it = variables[$1->name];
             if (!it.init)
@@ -510,7 +521,7 @@ expr:
 
     // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
 cond:
-	value '=' value       { printf("[BISON]EQUAL\n");
+	value '=' value       {
 
         // Napomuj R2 = a, R3 = a, R4 = b
         if($1->isNum){
@@ -555,7 +566,6 @@ cond:
   }
 	| value NE value
     {
-        printf("[BISON]NE\n");
         // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
         // Napomuj R2 = a, R3 = a, R4 = b
         if($1->isNum){
@@ -597,43 +607,39 @@ cond:
     }
 	| value '<' value
     {
-        printf("[BISON]LT\n");
-        //R2 = a R3 = b
+        //R1 = a MEM[R0] = b
         if($1->isNum){
-            pomp(2,$1->val); //a
+            pomp(1,$1->val); //a
         }
         else{
             pomp_addr(0,*$1);
-            std :: cout << "LOAD 2" << std :: endl;
+            writeAsm("LOAD 1\n");
         }
         if($3->isNum){
-            pomp(3,$3->val); //b
+            pomp(2,$3->val); //b
+            pomp(0, address + 1);
+            writeAsm("STORE 2\n");
         }
         else{
             pomp_addr(0,*$3);
-            std :: cout << "LOAD 3" << std :: endl;
         }
+
+        /* TERAZ MAMY W R1 = a MEM[R0] = b */
+
         // a < b lub a + 1 <= b
-        std :: cout << "STORE 3" << std :: endl;     //b -> memR0
-        std :: cout << "INC 2" << std :: endl;       //R2 + 1
-        std :: cout << "SUB 2" << std :: endl;      //R2 = R2 - memR0 = a + 1 - b = 0
-        std :: cout << "JZERO 2 ET" << label ++ << std :: endl;      //Jezeli R2 == 0 to mamy spelniony warunek
-        std :: cout << "JUMP ET" << label++ << std :: endl;         // Jezeli nie to skocz do ET2 - false
+        writeAsm("INC 1\n");       // ++a
+        writeAsm("SUB 1\n");      //R2 = R2 - memR0 = a + 1 - b = 0
 
-        //ET1 - TRUE
-        std :: cout << "JUMP ET" << label++ << std :: endl;         // Zakoncz - skocz do etykiety ET3
+        /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
 
-        //ET2 - FALSE
-        std :: cout << "JUMP ET" << label << std :: endl;         // Zakoncz - skocz do etykiety ET3
-
-        //ET3 -  END
-        std :: cout << "HALT" << std :: endl;
+        /* FALSE ETYKIETA */
+        std :: cout << "JUMP ET" << label++ << std :: endl;
 
     }
 	| value '>' value
     {
         // a > b lub a >= b + 1
-        printf("[BISON]GT\n");
         if($1->isNum){
             pomp(2,$1->val); //a
         }
@@ -669,7 +675,6 @@ cond:
 	| value LE value
     {
         // a <= b
-        printf("[BISON]LE\n");
         if($1->isNum){
             pomp(2,$1->val); //a
         }
@@ -704,7 +709,6 @@ cond:
 	| value GE value
     {
 
-        printf("[BISON]GE\n");
         if($1->isNum){
             pomp(2,$1->val); //a
         }
@@ -878,7 +882,7 @@ inline void pomp(int numRegister, uint64_t val)
 {
     int i;
 
-    std :: cout << "ZERO " << numRegister << std :: endl;
+    writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
 
     for(i = (sizeof(uint64_t) * 8) - 1; i > 0; --i)
         if(GET_BIT(val , i) )
@@ -887,16 +891,16 @@ inline void pomp(int numRegister, uint64_t val)
     for(; i > 0; --i)
         if( GET_BIT(val , i) )
         {
-            std :: cout << "INC " << numRegister << std :: endl;
-            std :: cout << "SHL " << numRegister << std :: endl;
+            writeAsm("INC " + std :: to_string(numRegister) + "\n");
+            writeAsm("SHL " + std :: to_string(numRegister) + "\n");
         }
         else
         {
-            std :: cout << "SHL " << numRegister << std :: endl;
+            writeAsm("SHL " + std :: to_string(numRegister) + "\n");
         }
 
     if(GET_BIT(val, i))
-        std :: cout << "INC " << numRegister << std :: endl;
+        writeAsm("INC " + std :: to_string(numRegister) + "\n");
 }
 
 inline void pomp_addr(int numRegister,Variable const &var){
@@ -908,15 +912,16 @@ inline void pomp_addr(int numRegister,Variable const &var){
         else{
             pomp(1,var.addr);
             pomp(0,var.varOffset->addr); // has no member named var_offset
-            std :: cout << "ADD 1" << std :: endl;
-            std :: cout << "COPY 0"  << std :: endl;
+            writeAsm("ADD1 \n");
+            writeAsm("COPY 0\n");
         }
 }
 
 
 inline void pompBigValue(int numRegister,cln :: cl_I value){
     cln :: cl_I i;
-    std :: cout << "ZERO " << numRegister << std :: endl;
+
+    writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
 
     for(i = sizeof(cln :: cl_I); i > 0; --i){
         if(GET_BIGBIT(value , i))
@@ -926,14 +931,40 @@ inline void pompBigValue(int numRegister,cln :: cl_I value){
     for(; i > 0; --i)
         if(GET_BIGBIT(value , i))
         {
-            std :: cout << "INC " << numRegister << std :: endl;
-            std :: cout << "SHL " << numRegister << std :: endl;
+            writeAsm("INC " + std :: to_string(numRegister) + "\n");
+            writeAsm("SHL " + std :: to_string(numRegister) + "\n");
         }
         else
         {
-            std :: cout << "SHL " << numRegister << std :: endl;
+            writeAsm("SHL " + std :: to_string(numRegister) + "\n");
         }
 
     if(GET_BIGBIT(value, i))
-        std :: cout << "INC " << numRegister << std :: endl;
+        writeAsm("INC " + std :: to_string(numRegister) + "\n");
+}
+
+inline void writeAsm(std :: string const &str)
+{
+    code.push_back(str);
+
+    ++asmline;
+}
+
+int compile(const char *infile, const char *outfile)
+{
+    int ret;
+    std :: ofstream outstream;
+
+    yyin = fopen(infile, "r");
+    ret = yyparse();
+    fclose(yyin);
+
+    outstream.open(outfile);
+
+    for(unsigned int i = 0; i < code.size(); ++i)
+        outstream << code[i];
+
+    outstream.close();
+
+    return ret;
 }

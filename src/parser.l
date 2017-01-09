@@ -34,8 +34,6 @@ WHITE_C 				[ \t]
 {WHITE_C}+
 ^{WHITE_C}*\n			{ ++lines; }
 
-\n						{ ++lines; }
-
 \;						{   return yy_lex((int)';'); }
 
 \+						{   return yy_lex((int)'+'); }

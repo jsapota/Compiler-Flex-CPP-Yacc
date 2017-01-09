@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -pedantic -O3 -lcln
+CXXFLAGS = -std=c++11 -Wall -pedantic -O3
 LEX = flex
 YAC = bison
 
@@ -31,7 +31,7 @@ $(ODIR)/%.o: $(SDIR)/%.cpp $(DEPS)
 
 # Compile and link all together
 $(EXEC): $(ODIR)/parser_lex.yy.c $(ODIR)/parser.tab.c $(IDIR)/parser.tab.h $(OBJS)
-	$(CXX) $(CXXFLAGS) -D_GNU_SOURCE -I$(IDIR) $(ODIR)/parser.tab.c $(ODIR)/parser_lex.yy.c $(OBJS) -o $@
+	$(CXX) $(CXXFLAGS) -D_GNU_SOURCE -I$(IDIR) $(ODIR)/parser.tab.c $(ODIR)/parser_lex.yy.c $(OBJS) -lcln -lfl -o $@
 
 ##### INTERPRETER #####
 interpreter.out: ./external/interpreter.cc

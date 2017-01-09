@@ -899,7 +899,7 @@ inline void pomp_addr(int numRegister,Variable const &var){
             pomp(4,var.addr);
             pomp(0,var.varOffset->addr);
             writeAsm("ADD 4 \n");
-            writeAsm("COPY 0\n");
+            writeAsm("COPY 4\n");
         }
 }
 

@@ -1,28 +1,21 @@
 %{
-
 #include <common.h>
 #include <fstream>
 #include <vector>
-
 int yylex(void);
 void yyerror(const char *msg);
 //cln :: cl_I address = 0;
 int address = 0;
 static int label = 0;
 extern FILE *yyin;
-
 uint64_t asmline = 0;
-
 std :: vector <std :: string> code;
-
 inline void pomp(int numRegister, uint64_t val);
 /* 0 iff ikty bit w n = 0, else 1 */
 #define GET_BIT(n , k)      (((n) & (1ull << k)) >> k )
 #define GET_BIGBIT(n, k)    ((cln :: oddp(n >> k)))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
-
 inline void writeAsm(std :: string const &str);
-
 %}
 
 /* we need own struct so define it before use in union */
@@ -30,6 +23,7 @@ inline void writeAsm(std :: string const &str);
 {
     #include <string.h>
     #include <map>
+    #include <cln/integer.h>
 
     typedef struct yytoken
     {
@@ -60,6 +54,7 @@ inline void writeAsm(std :: string const &str);
 
     }Variable;
     void inline pomp_addr(int numRegister, Variable const &var);
+    void inline pompBigValue(int numRegister, cln :: cl_I value);
     void inline variable_copy(Variable &dst, Variable const &src);
     void variable_load(Variable const &var, int numRegister);
     static std :: map<std :: string, Variable> variables;
@@ -273,6 +268,9 @@ expr:
             if($1->isNum && $3->isNum){
                 /* TODO: Zmiana na BigValue ( czyli cln a = $1->val, b = $3->val, pompBig(2, a + b)) */
                     pomp(2, $1->val + $3->val);
+                    cln :: cl_I a = $1->val;
+                    cln :: cl_I b = $3->val;
+                    pompBigValue(2,a + b);
             }
             else{
                 // zmienna i stala
@@ -372,16 +370,16 @@ expr:
             pomp(1,$1->val); //a
         else{
             pomp_addr(0,*$1);
-            std :: cout << "LOAD 1" << std :: endl;
+            writeAsm("LOAD 1\n");
         }
         if($3->isNum){
-            pomp(2,$3->val); //a
-            pomp(3,$3->val); //a
+            pomp(2,$3->val); //b
+            pomp(3,$3->val); //b
         }
         else{
             pomp_addr(0,*$3);
-            std :: cout << "LOAD 2" << std :: endl;
-            std :: cout << "LOAD 3" << std :: endl;
+            writeAsm("LOAD 2\n");
+            writeAsm("LOAD 3\n");
         }
 
 
@@ -436,11 +434,12 @@ expr:
             }
         }
         // Czysty assembler
+        // Czysty assembler
         if($1->isNum)
             pomp(1,$1->val); //a
         else{
             pomp_addr(0,*$1);
-            std :: cout << "LOAD 1" << std :: endl;
+            writeAsm("LOAD 1\n");
         }
         if($3->isNum){
             pomp(2,$3->val); //b
@@ -448,8 +447,8 @@ expr:
         }
         else{
             pomp_addr(0,*$3);
-            std :: cout << "LOAD 2" << std :: endl;
-            std :: cout << "LOAD 3" << std :: endl;
+            writeAsm("LOAD 2\n");
+            writeAsm("LOAD 3\n");
         }
 
         //  Zaladowane wiec dzielimy
@@ -488,7 +487,7 @@ expr:
                 pomp(1,$1->val); //a
             else{
                 pomp_addr(0,*$1);
-                std :: cout << "LOAD 1" << std :: endl;
+                writeAsm("LOAD 1\n");
             }
             if($3->isNum){
                 pomp(2,$3->val); //b
@@ -496,8 +495,8 @@ expr:
             }
             else{
                 pomp_addr(0,*$3);
-                std :: cout << "LOAD 2" << std :: endl;
-                std :: cout << "LOAD 3" << std :: endl;
+                writeAsm("LOAD 2\n");
+                writeAsm("LOAD 3\n");
             }
 
             //  Zaladowane wiec mod
@@ -530,20 +529,20 @@ cond:
         }
         else{
             pomp_addr(0,*$1);
-            std :: cout << "LOAD 2" << std :: endl;
-            std :: cout << "LOAD 3" << std :: endl;
+            writeAsm("LOAD 2\n");
+            writeAsm("LOAD 3\n");
         }
         if($3->isNum){
             pomp(4,$3->val); //b
         }
         else{
             pomp_addr(0,*$3);
-            std :: cout << "LOAD 4" << std :: endl;
+            writeAsm("LOAD 4\n"); //b
         }
 
         //Czy b <= a
-        std :: cout << "STORE" << " 4" << std :: endl;       // b -> memR0
-        std :: cout << "SUB" << " 2" << std :: endl;        // R2 = a - memR0 = a - b
+        writeAsm("STORE 4\n");     // b -> memR0
+        writeAsm("SUB 2\n"); //b   // R2 = a - memR0 = a - b
         std :: cout << "JZERO 2" << " ET" << label++ << std :: endl; // jezeli R2 == 0 to skocz do ET1
         std :: cout << "JUMP ET" << label++ << std :: endl; //  skocz do ET2 - FALSE
 
@@ -574,15 +573,15 @@ cond:
         }
         else{
             pomp_addr(0,*$1);
-            std :: cout << "LOAD 2" << std :: endl;
-            std :: cout << "LOAD 3" << std :: endl;
+            writeAsm("LOAD 2\n");
+            writeAsm("LOAD 3\n");
         }
         if($3->isNum){
             pomp(4,$3->val); //b
         }
         else{
             pomp_addr(0,*$3);
-            std :: cout << "LOAD 4" << std :: endl;
+            writeAsm("LOAD 4\n");
         }
 
         //Czy b => a
@@ -639,107 +638,93 @@ cond:
     }
 	| value '>' value
     {
-        // a > b lub a >= b + 1
-        if($1->isNum){
-            pomp(2,$1->val); //a
-        }
-        else{
-            pomp_addr(0,*$1);
-            std :: cout << "LOAD 2" << std :: endl;
-        }
         if($3->isNum){
-            pomp(3,$3->val); //b
+            pomp(1,$3->val); //a
         }
         else{
             pomp_addr(0,*$3);
-            std :: cout << "LOAD 3" << std :: endl;
+            writeAsm("LOAD 1\n");
         }
-        // a >= b
-        // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
-        std :: cout << "STORE 2" << std :: endl; //a -> memR0
-        std :: cout << "INC 3" << std :: endl; //R3 = b + 1
-        std :: cout << "SUB 3" << std :: endl;  //R3 = R3 - memR0 = b + 1 - a  = 0
-        std :: cout << "JZERO 3 ET" << label++ << std :: endl;//Jezeli R3 == 0 to mamy
-        std :: cout << "JUMP ET" << label++ << std :: endl;//Jezeli nie to END FALSE
+        if($1->isNum){
+            pomp(2,$1->val); //b
+            pomp(0, address + 1);
+            writeAsm("STORE 2\n");
+        }
+        else{
+            pomp_addr(0,*$1);
+        }
 
-        //ET1 - TRUE
-        std :: cout << "JUMP ET" << label++ << std :: endl;         // Zakoncz - skocz do etykiety ET3
+        /* TERAZ MAMY W R1 = b MEM[R0] = a */
 
-        //ET2 - FALSE
-        std :: cout << "JUMP ET" << label << std :: endl;         // Zakoncz - skocz do etykiety ET3
+        // b < a lub b + 1 <= a
+        writeAsm("INC 1\n");       // ++b
+        writeAsm("SUB 1\n");      //R2 = R2 - memR0 = b + 1 - a = 0
 
-        //ET3 -  END
-        std :: cout << "HALT" << std :: endl;
+        /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
 
+        /* FALSE ETYKIETA */
+        std :: cout << "JUMP ET" << label++ << std :: endl;
     }
 	| value LE value
     {
-        // a <= b
+        //R1 = a MEM[R0] = b
         if($1->isNum){
-            pomp(2,$1->val); //a
+            pomp(1,$1->val); //a
         }
         else{
             pomp_addr(0,*$1);
-            std :: cout << "LOAD 2" << std :: endl;
+            writeAsm("LOAD 1\n");
         }
         if($3->isNum){
-            pomp(3,$3->val); //a
+            pomp(2,$3->val); //b
+            pomp(0, address + 1);
+            writeAsm("STORE 2\n");
         }
         else{
             pomp_addr(0,*$3);
-            std :: cout << "LOAD 3" << std :: endl;
         }
-        std :: cout << "STORE 3" << std :: endl;     //b -> memR0
-        std :: cout << "SUB 2" << std :: endl;      //R2 = a - memR0 = a - b
-        std :: cout << "JZERO 2 ET" << label++ << std :: endl;      //Jezeli R2 == 0 to mamy spelniony warunek
-        std :: cout << "JUMP ET" << label++ << std :: endl;         // Jezeli nie to skocz do ET2 - false
 
-        //ET1 - TRUE
-        std :: cout << "INC 0"  << std :: endl;
-        std :: cout << "JUMP ET" << label++ << std :: endl;         // Zakoncz - skocz do etykiety ET3
+        /* TERAZ MAMY W R1 = a MEM[R0] = b */
 
-        //ET2 - FALSE
-        std :: cout << "ZERO 0" << std :: endl;     // Nie zwiekszamy etykiety bo zostala zwiekszona do 3 w TRUE
-        std :: cout << "JUMP ET" << label << std :: endl;         // Zakoncz - skocz do etykiety ET3
+        // a < b lub a <= b
+        writeAsm("SUB 1\n");      //R2 = R2 - memR0 = a - b = 0
 
-        //ET3 -  END
-        std :: cout << "HALT" << std :: endl;
+        /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
 
+        /* FALSE ETYKIETA */
+        std :: cout << "JUMP ET" << label++ << std :: endl;
     }
 	| value GE value
     {
 
-        if($1->isNum){
-            pomp(2,$1->val); //a
-        }
-        else{
-            pomp_addr(0,*$1);
-            std :: cout << "LOAD 2" << std :: endl;
-        }
         if($3->isNum){
-            pomp(3,$3->val); //a
+            pomp(1,$3->val); //a
         }
         else{
             pomp_addr(0,*$3);
-            std :: cout << "LOAD 3" << std :: endl;
+            writeAsm("LOAD 1\n");
         }
-        // a >= b
-        // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
-        std :: cout << "STORE 2" << std :: endl; //a -> memR0
-        std :: cout << "SUB 3" << std :: endl;  //R3 = b - memR0 = b - a
-        std :: cout << "JZERO 3 ET" << label++ << std :: endl;//Jezeli R3 == 0 to mamy
-        std :: cout << "JUMP ET" << label++ << std :: endl;//Jezeli nie to END FALSE
+        if($1->isNum){
+            pomp(2,$1->val); //b
+            pomp(0, address + 1);
+            writeAsm("STORE 2\n");
+        }
+        else{
+            pomp_addr(0,*$1);
+        }
 
-        //ET1 - TRUE
-        std :: cout << "INC 0"  << std :: endl;
-        std :: cout << "JUMP ET" << label++ << std :: endl;         // Zakoncz - skocz do etykiety ET3
+        /* TERAZ MAMY W R1 = b MEM[R0] = a */
 
-        //ET2 - FALSE
-        std :: cout << "ZERO 0" << std :: endl;     // Nie zwiekszamy etykiety bo zostala zwiekszona do 3 w TRUE
-        std :: cout << "JUMP ET" << label << std :: endl;         // Zakoncz - skocz do etykiety ET3
+        // b < a lub b  <= a
+        writeAsm("SUB 1\n");      //R2 = R2 - memR0 = b - a = 0
 
-        //ET3 -  END
-        std :: cout << "HALT" << std :: endl;
+        /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
+
+        /* FALSE ETYKIETA */
+        std :: cout << "JUMP ET" << label++ << std :: endl;
 
     }
 ;
@@ -910,9 +895,9 @@ inline void pomp_addr(int numRegister,Variable const &var){
         if ( var.varOffset == NULL )
             pomp(numRegister, var.addr + var.offset);
         else{
-            pomp(1,var.addr);
-            pomp(0,var.varOffset->addr); // has no member named var_offset
-            writeAsm("ADD1 \n");
+            pomp(4,var.addr);
+            pomp(0,var.varOffset->addr);
+            writeAsm("ADD 4 \n");
             writeAsm("COPY 0\n");
         }
 }
@@ -923,7 +908,7 @@ inline void pompBigValue(int numRegister,cln :: cl_I value){
 
     writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
 
-    for(i = sizeof(cln :: cl_I); i > 0; --i){
+    for(i = cln :: integer_length(i); i > 0; --i){
         if(GET_BIGBIT(value , i))
             break;
     }

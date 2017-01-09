@@ -1,0 +1,24 @@
+VAR
+
+a b c d e f
+
+BEGIN
+
+READ a; { 500 }
+
+b := a * 10; { 5k }
+c := 100;
+
+d := c * 200; { 20k }
+
+e := a * 10000; { 5kk }
+f := 100 * d; { 2kk }
+
+WRITE a;
+WRITE b;
+WRITE c;
+WRITE d;
+WRITE e;
+WRITE f;
+
+END

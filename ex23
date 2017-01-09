@@ -1,0 +1,31 @@
+VAR
+
+a b c d e f g h i j
+
+BEGIN
+
+READ a; { 2000 }
+READ b; { 10 }
+
+c := a - b; { 1990 }
+d := c - b; { 1980 }
+e := d - b ; { 1970 }
+f := a - e; { 30 }
+g := c - e; { 20 }
+h := d - e; { 10 }
+i := f - h; { 20 }
+j := i - e; { 0 }
+
+
+WRITE a;
+WRITE b;
+WRITE c;
+WRITE d;
+WRITE e;
+WRITE f;
+WRITE g;
+WRITE h;
+WRITE i;
+WRITE j;
+
+END

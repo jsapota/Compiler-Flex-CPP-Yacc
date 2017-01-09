@@ -1,0 +1,44 @@
+VAR
+
+a b c
+
+BEGIN
+
+READ a;
+READ b;
+
+c := a * b;
+a := b * c;
+b := a * c;
+
+WRITE a;
+WRITE b;
+WRITE c;
+
+READ a;
+b := 20;
+
+c := a * b;
+a := b * c;
+b := a * c;
+
+WRITE a;
+WRITE b;
+WRITE c;
+
+a := 10;
+READ b;
+
+c := a * b;
+a := b * c;
+b := a * c;
+
+WRITE a;
+WRITE b;
+WRITE c;
+
+READ a;
+a := 10 * a;
+WRITE a;
+
+END

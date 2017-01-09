@@ -1,0 +1,19 @@
+VAR
+
+a b c d
+
+BEGIN
+
+READ a;
+
+b := a * 100;
+c := b * 10000;
+d := c * 1000000;
+a := d * 100000000;
+
+WRITE b;
+WRITE c;
+WRITE d;
+WRITE a;
+
+END

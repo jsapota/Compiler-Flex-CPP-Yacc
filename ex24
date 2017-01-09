@@ -1,0 +1,88 @@
+VAR
+
+a b c d e f t[10000000000000000]
+
+BEGIN
+
+a := 0;
+b := 100 - a;
+READ c; { 1000 }
+
+WRITE a; { 0 }
+WRITE b; { 100 }
+WRITE c; { 1000 }
+
+d := c - b; { 900}
+b := c; { 1000 }
+
+WRITE b; { 1000 }
+WRITE d; { 900 }
+
+d := 110;
+t[220] := 500;
+t[500] := 110;
+
+WRITE t[220]; { 500 }
+WRITE t[500]; { 110 }
+
+t[d] := d - d;
+
+WRITE t[110]; { 0}
+WRITE t[d]; { 0 }
+WRITE d; { 110 }
+
+d := t[d]; { 0 }
+WRITE d; { 0 }
+
+d := t[d] - t[d]; { 0 }
+WRITE d; { 0 }
+
+
+b := 1;
+t[b] := 100 - b; { 99 }
+
+WRITE t[1]; { 99 }
+WRITE t[b]; { 99 }
+
+d := 110;
+t[d] := d - t[d];
+WRITE d; { 110 }
+WRITE t[d]; { 0 }
+
+t[d] := 666;
+e := t[d] - d;
+WRITE e; {556 }
+
+c := 200;
+a := 199;
+t[a] := 1000;
+t[c] := 2000;
+t[c] := t[c] - t[a];
+WRITE t[c]; { 1000 }
+
+t[c] := t[c] - c;
+WRITE t[c]; { 800 }
+
+t[c] := t[c] - 100; { 700 }
+WRITE t[c];
+
+t[c] := 100 - t[c];
+WRITE t[c]; { 0 }
+
+t[100] := t[c] - t[a];
+WRITE t[100]; { 0 }
+
+t[100] := 100 - t[c];
+WRITE t[100]; { 100 }
+
+t[100] := t[c] - t[100];
+WRITE t[100]; { 0 }
+
+t[c] := c - t[c];
+WRITE t[100]; { 0 }
+WRITE t[c]; { 200 }
+
+WRITE b; { 1}
+WRITE t[b]; { 99 }
+
+END

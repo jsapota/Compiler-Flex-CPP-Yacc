@@ -1,0 +1,19 @@
+VAR
+
+t[5]
+
+
+BEGIN
+
+READ t[0];
+READ t[1];
+t[0] := 1000;
+t[0] := t[1];
+t[2] := t[0];
+
+WRITE t[0];
+WRITE t[1];
+WRITE t[2];
+
+
+END

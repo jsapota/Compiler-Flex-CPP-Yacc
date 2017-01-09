@@ -1,0 +1,77 @@
+VAR
+
+a b c d e f t[1000]
+
+BEGIN
+
+READ a; { 500 }
+b := 1000;
+
+c := a + b;
+d := b - a;
+e := d + c;
+f := e - d;
+
+WRITE a; { 500 }
+WRITE b; { 1000}
+WRITE c; {1500}
+WRITE d; { 500 }
+WRITE e; {2000}
+WRITE f; { 1500}
+
+READ a; { 10000 }
+READ b; { 1 }
+
+c := a - b;
+d := c + a;
+e := d - c;
+f := c - 10000;
+
+WRITE a; { 10000 }
+WRITE b; { 1}
+WRITE c; { 9999 }
+WRITE d; { 19999}
+WRITE e; { 10000 }
+WRITE f; { 0}
+
+t[0] := 0;
+t[1] := 10;
+t[2] := 20;
+
+c := 10;
+d := 7;
+e := 1;
+
+a := c - d;
+b := a + e;
+t[a] := 30;
+t[b] := 40;
+
+WRITE t[0]; {0 }
+WRITE t[1]; {10 }
+WRITE t[2]; {20}
+WRITE t[3]; {30}
+WRITE t[4]; {40}
+
+t[a] := t[b] - t[e];
+t[b] := t[b] - t[a];
+
+WRITE t[a]; { 30 }
+WRITE t[b];  { 10 }
+
+t[0] := t[a] + t[b];
+
+WRITE t[0]; { 70 }
+WRITE t[1]; {10}
+WRITE t[2]; {20}
+WRITE t[3]; {30}
+WRITE t[4]; { 10}
+
+WRITE a; { 3 }
+WRITE b; { 4}
+WRITE c; { 10}
+WRITE d; { 7}
+WRITE e; {1 }
+WRITE f; { 0}
+
+END

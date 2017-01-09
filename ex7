@@ -1,0 +1,30 @@
+VAR
+
+a b c d e f g h i j
+
+BEGIN
+
+a := 1000;
+b := 2000;
+c := a + b; { 3000 }
+d := b + c; { 5000 }
+e := c + d; { 8000 }
+f := d + e; { 13000 }
+g := e + f; { 21000 }
+h := f + g; { 34000 }
+i := g + h; { 55000 }
+j := h + i; { 89000 }
+
+
+WRITE a;
+WRITE b;
+WRITE c;
+WRITE d;
+WRITE e;
+WRITE f;
+WRITE g;
+WRITE h;
+WRITE i;
+WRITE j;
+
+END

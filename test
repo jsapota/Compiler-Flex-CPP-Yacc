@@ -1,0 +1,8 @@
+rm asm
+touch asm
+./compiler.out  ex$1 asm
+./interpreter.out asm
+
+
+
+

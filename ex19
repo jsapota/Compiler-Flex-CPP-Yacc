@@ -1,0 +1,40 @@
+VAR
+
+a b c t[5]
+
+BEGIN
+
+a := 120 - 20;
+
+t[0] := 1000;
+
+b := a - 50;
+c := t[0] - 500;
+
+WRITE a;
+WRITE b;
+WRITE c;
+
+t[1] := a - 20;
+t[2] := t[0] - 300;
+
+WRITE t[1];
+WRITE t[2];
+
+c := 3;
+b := 1;
+t[c] := t[b] - 70;
+
+
+WRITE t[0];
+WRITE t[1];
+WRITE t[2];
+WRITE t[c];
+
+b := a - 500;
+c := t[0] - 90000;
+
+WRITE b;
+WRITE c;
+
+END

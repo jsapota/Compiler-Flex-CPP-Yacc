@@ -179,9 +179,8 @@ command:
         /* Konwencja mowi ze wynik expr bedzie w R1  */
 
         /* ustaw R0 na addr identifiera  WIEMY ZE TO VAR */
-        pomp_addr(0, *$1);
-        writeAsm("STORE 1\n");
-        std :: cout << "Variable len" << variables[$1->name].len << std :: endl;
+        pomp_addr(0, *$1); // R0 = addres zmiennej
+        writeAsm("STORE 1\n"); //
         variables[$1->name].init = true;
     }
 	| IF cond THEN commands ELSE commands ENDIF
@@ -268,10 +267,11 @@ expr:
                 // stala i stala
             if($1->isNum && $3->isNum){
                 /* TODO: Zmiana na BigValue ( czyli cln a = $1->val, b = $3->val, pompBig(2, a + b)) */
-                    pomp(2, $1->val + $3->val);
+                    pomp(1, $1->val + $3->val);
                     cln :: cl_I a = $1->val;
                     cln :: cl_I b = $3->val;
-                    pompBigValue(2,a + b);
+                    //pompBigValue(1,a + b);
+
             }
             else{
                 // zmienna i stala
@@ -315,13 +315,13 @@ expr:
             // stala i stala
         if($1->isNum && $3->isNum)
             if($3->val > $1->val)
-                pomp(2,0);
+                writeAsm("ZERO 1\n");
             else
             {
                 if($3->val >= $1->val)
-                    pomp(2, 0ull);
+                    writeAsm("ZERO 1\n");
                 else
-                    pomp(2, $1->val - $3->val);
+                    pomp(1, $1->val - $3->val);
             }
         else{
             // zmienna i stala

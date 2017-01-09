@@ -1,0 +1,45 @@
+TEST 9 - nie zapisuje READ t[b] = 6 ?? - nie czyta tablicy[zmiennej] 
+po zmianie t[a] na t[2] dziala
+
+a := 2;
+READ t[a]; //t[2] = 5
+READ b; // b = 1
+READ t[b]; //t[1] = 6
+t[0] := 1000; 
+t[0] := t[b]; // t[0] = 6
+t[a] := t[0]; // t[2] = 6 t[1] = 6
+
+WRITE t[0]; //6 
+WRITE t[1]; //0
+WRITE t[2]; //0
+WRITE a; // 2
+WRITE b; // 1
+
+
+TEST 101 - wlasny - dla nastepujacego kodu sa takie problemy
+- nie zapisuje wartosci dzialan
+- przy 3 WRITE zwraca wartosc b czyli poprzedniej zmiennej zamiast a 
+VAR
+a b c d
+BEGIN
+a := 10 - 5;
+WRITE a;
+b := 15;
+WRITE b;
+a := 100 - 50 ;
+WRITE a;
+b := 150;
+WRITE b;
+a := 10 - 50;
+WRITE a;
+b := 100;
+WRITE b;
+END
+
+> 933126484 - 5
+> 15 
+> 15 - 50
+> 150 
+> 150 - 0
+> 100 
+

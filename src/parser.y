@@ -496,43 +496,43 @@ expr:
         writeAsm(result+"\n");  // line 11
 //////////  koniec while
 //////////  a <= b
-        writeAsm("SHR 2\n");    // line 11
-        writeAsm("SHR 4\n");    // line 12
-        writeAsm("STORE 2\n");  // line 13
-        writeAsm("SUB 1\n");    // line 14  // 48 - 40  - > R1 = 8
-        writeAsm("ZERO 2\n");   // line 15
-        writeAsm("STORE 3\n");  // line 16
-        writeAsm("ADD 2\n");    // line 17  //R2 = 5
+        writeAsm("SHR 2\n");    // line 12
+        writeAsm("SHR 4\n");    // line 13
+        writeAsm("STORE 2\n");  // line 14
+        writeAsm("SUB 1\n");    // line 15  // 48 - 40  - > R1 = 8
+        writeAsm("ZERO 2\n");   // line 16
+        writeAsm("STORE 3\n");  // line 17
+        writeAsm("ADD 2\n");    // line 18  //R2 = 5
 ////////// koniec pierwszej operacji
 ////////// drugi while
-        writeAsm("STORE 1\n");  // line 18 // memR0 = a
-        writeAsm("ZERO 3\n");   // line 19
-        writeAsm("ADD 3\n");    // line 20 // R3 = a
-        writeAsm("STORE 2\n");  // line 21 // memR0 = b
-        writeAsm("SUB 1\n");    // line 22 // R1 - b
+        writeAsm("STORE 1\n");  // line 19 // memR0 = a
+        writeAsm("ZERO 3\n");   // line 20
+        writeAsm("ADD 3\n");    // line 21 // R3 = a
+        writeAsm("STORE 2\n");  // line 22 // memR0 = b
+        writeAsm("SUB 1\n");    // line 23 // R1 - b
         jumpline = asmline + 3;
         result = "JZERO 1 " + std::to_string(jumpline); // nie wiemy czy a == b
-        writeAsm(result+"\n");  // line 23
-        writeAsm("INC 4\n");    // line 24 // R4 ++
+        writeAsm(result+"\n");  // line 24
+        writeAsm("INC 4\n");    // line 25 // R4 ++
         jumpline = asmline -6;
         result = "JUMP " + std::to_string(jumpline); // a - b == 0 ?
-        writeAsm(result+"\n");  // line 25
+        writeAsm(result+"\n");  // line 26
 ////////// w opor nie optymalnie ale trudno
-        writeAsm("INC 3\n");    // line 26      // R3 = a + 1
-        writeAsm("SUB 3\n");    // line 27      // R3 = a + 1 - b
+        writeAsm("INC 3\n");    // line 27      // R3 = a + 1
+        writeAsm("SUB 3\n");    // line 28      // R3 = a + 1 - b
         jumpline = asmline + 2;
         result = "JZERO 3 " + std::to_string(jumpline); // nie wiemy czy a == b
-        writeAsm(result+"\n");  // line 28
-        writeAsm("INC 4\n");    // line 29
-        writeAsm("ZERO 1\n");   // line 30
-        writeAsm("STORE 4\n");  // line 31
-        writeAsm("ADD 1\n");    // line 32
+        writeAsm(result+"\n");  // line 29
+        writeAsm("INC 4\n");    // line 30
+        writeAsm("ZERO 1\n");   // line 31
+        writeAsm("STORE 4\n");  // line 32
+        writeAsm("ADD 1\n");    // line 33
         jumpline = asmline + 2;
         result = "JUMP " + std::to_string(jumpline); // Przeskocz zerowanie R1
-        writeAsm(result+"\n");  // line 33
+        writeAsm(result+"\n");  // line 34
 /////////   koniec dzielnia...
 /////////   jezeli nie bylo sensu to zwroc zero
-        writeAsm("ZERO 1\n");   // line 34
+        writeAsm("ZERO 1\n");   // line 35
 
 
 

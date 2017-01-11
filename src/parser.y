@@ -466,6 +466,7 @@ expr:
             writeAsm("LOAD 2\n");
             writeAsm("LOAD 3\n");
         }
+        pomp(0,address++);
 ////////// Sprawdzmy czy jest sens dzielic
 ////////// a < b lub a + 1 <= b
         writeAsm("INC 4\n");       // ++a

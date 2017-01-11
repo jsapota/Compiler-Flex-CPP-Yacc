@@ -482,17 +482,17 @@ expr:
         writeAsm(result+"\n");  // line 4
         writeAsm("ADD 1\n");    // line 5
         jumpline = asmline + 2;
-        result = "JZERO 4 " + std::to_string(jumpline);
+        result = "JZERO 4 " + std::to_string(jumpline); // Jezeli R4 == 0 INC
         writeAsm(result+"\n");  // line 6
         jumpline = asmline + 2;
         result = "JUMP " + std::to_string(jumpline);
-        writeAsm(result+"\n");  // line 7
+        writeAsm(result+"\n");  // line 7               // jezeli R0 > 0 to pomin
         writeAsm("INC 4\n");    // line 8
 //////////  akcje z while
-        writeAsm("SHL 2\n");    // line 9
-        writeAsm("SHL 4\n");    // line 10
+        writeAsm("SHL 2\n");    // line 9               // R2 = b * 2
+        writeAsm("SHL 4\n");    // line 10              // R4 = nasz przyszly wynik
         jumpline = asmline - 8;
-        result = "JUMP " + std::to_string(jumpline);
+        result = "JUMP " + std::to_string(jumpline);    // dopoki mozna to
         writeAsm(result+"\n");  // line 11
 //////////  koniec while
 //////////  a <= b

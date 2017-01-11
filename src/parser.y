@@ -448,11 +448,14 @@ expr:
         int jumpline;
         writeAsm("ZERO 4\n");
         // Czysty assembler
-        if($1->isNum)
+        if($1->isNum){
             pomp(1,$1->val); //a
+            pomp(4,$3->val); //b
+        }
         else{
             pomp_addr(0,*$1);
             writeAsm("LOAD 1\n");
+            writeAsm("LOAD 4\n");
         }
         if($3->isNum){
             pomp(2,$3->val); //b
@@ -465,8 +468,6 @@ expr:
         }
 ////////// Sprawdzmy czy jest sens dzielic
 ////////// a < b lub a + 1 <= b
-        writeAsm("STORE 1\n");
-        writeAsm("ADD 4\n");
         writeAsm("INC 4\n");       // ++a
         writeAsm("STORE 2\n");
         writeAsm("SUB 4\n");      //R1 = R1 - memR0 = a + 1 - b = 0

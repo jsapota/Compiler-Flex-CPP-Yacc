@@ -349,7 +349,7 @@ expr:
             }
         }
     }
-	| value '*' value  { // Wedlug mnie powinno dzialac. To obmyslilem w nocy
+	| value '*' value  {
         if(!$1->isNum){
         auto it = variables[$1->name];
         if (!it.init)
@@ -444,7 +444,9 @@ expr:
                 exit(1);
             }
         }
-        // Czysty assembler
+        std :: string result;
+        int jumpline;
+        writeAsm("ZERO 4\n");
         // Czysty assembler
         if($1->isNum)
             pomp(1,$1->val); //a
@@ -461,16 +463,76 @@ expr:
             writeAsm("LOAD 2\n");
             writeAsm("LOAD 3\n");
         }
-
-        //  Zaladowane wiec dzielimy
-
-
-
-
-
-
-
-
+////////// Sprawdzmy czy jest sens dzielic
+////////// a < b lub a + 1 <= b
+        writeAsm("STORE 1\n");
+        writeAsm("ADD 4\n");
+        writeAsm("INC 4\n");       // ++a
+        writeAsm("STORE 2\n");
+        writeAsm("SUB 4\n");      //R1 = R1 - memR0 = a + 1 - b = 0
+        jumpline = asmline + 35;
+        result = "JZERO 4 " + std::to_string(jumpline);
+        writeAsm(result+"\n");      //Jezeli R4 == 0 to zwracamy 0  i styka
+        writeAsm("ZERO 4\n");   // line 1
+//////////  while a > b
+        writeAsm("STORE 2\n");  // line 2
+        writeAsm("SUB 1\n");    // line 3
+        jumpline = asmline + 8;
+        result = "JZERO 1 " + std::to_string(jumpline);
+        writeAsm(result+"\n");  // line 4
+        writeAsm("ADD 1\n");    // line 5
+        jumpline = asmline + 2;
+        result = "JZERO 4 " + std::to_string(jumpline);
+        writeAsm(result+"\n");  // line 6
+        jumpline = asmline + 2;
+        result = "JUMP " + std::to_string(jumpline);
+        writeAsm(result+"\n");  // line 7
+        writeAsm("INC 4\n");    // line 8
+//////////  akcje z while
+        writeAsm("SHL 2\n");    // line 9
+        writeAsm("SHL 4\n");    // line 10
+        jumpline = asmline - 8;
+        result = "JUMP " + std::to_string(jumpline);
+        writeAsm(result+"\n");  // line 11
+//////////  koniec while
+//////////  a <= b
+        writeAsm("SHR 2\n");    // line 11
+        writeAsm("SHR 4\n");    // line 12
+        writeAsm("STORE 2\n");  // line 13
+        writeAsm("SUB 1\n");    // line 14  // 48 - 40  - > R1 = 8
+        writeAsm("ZERO 2\n");   // line 15
+        writeAsm("STORE 3\n");  // line 16
+        writeAsm("ADD 2\n");    // line 17  //R2 = 5
+////////// koniec pierwszej operacji
+////////// drugi while
+        writeAsm("STORE 1\n");  // line 18 // memR0 = a
+        writeAsm("ZERO 3\n");   // line 19
+        writeAsm("ADD 3\n");    // line 20 // R3 = a
+        writeAsm("STORE 2\n");  // line 21 // memR0 = b
+        writeAsm("SUB 1\n");    // line 22 // R1 - b
+        jumpline = asmline + 3;
+        result = "JZERO 1 " + std::to_string(jumpline); // nie wiemy czy a == b
+        writeAsm(result+"\n");  // line 23
+        writeAsm("INC 4\n");    // line 24 // R4 ++
+        jumpline = asmline -6;
+        result = "JUMP " + std::to_string(jumpline); // a - b == 0 ?
+        writeAsm(result+"\n");  // line 25
+////////// w opor nie optymalnie ale trudno
+        writeAsm("INC 3\n");    // line 26      // R3 = a + 1
+        writeAsm("SUB 3\n");    // line 27      // R3 = a + 1 - b
+        jumpline = asmline + 2;
+        result = "JZERO 3 " + std::to_string(jumpline); // nie wiemy czy a == b
+        writeAsm(result+"\n");  // line 28
+        writeAsm("INC 4\n");    // line 29
+        writeAsm("ZERO 1\n");   // line 30
+        writeAsm("STORE 4\n");  // line 31
+        writeAsm("ADD 1\n");    // line 32
+        jumpline = asmline + 2;
+        result = "JUMP " + std::to_string(jumpline); // Przeskocz zerowanie R1
+        writeAsm(result+"\n");  // line 33
+/////////   koniec dzielnia...
+/////////   jezeli nie bylo sensu to zwroc zero
+        writeAsm("ZERO 1\n");   // line 34
 
 
 
@@ -645,7 +707,6 @@ cond:
 
         /* FALSE ETYKIETA */
         std :: cout << "JUMP ET" << label++ << std :: endl;
-
     }
 	| value '>' value
     {
@@ -852,14 +913,12 @@ identifier:
 ;
 
 %%
-void yyerror(const char *msg)
-{
+void yyerror(const char *msg){
     printf("ERROR!!!\t%s\t%s\nLINE\t%d\n",msg,yylval.token.str, yylval.token.line);
     exit(1);
 }
 
-inline void variable_copy(Variable &dst, Variable const &src)
-{
+inline void variable_copy(Variable &dst, Variable const &src){
         dst.name = src.name;
         dst.reg = src.reg;
         dst.addr = src.addr;
@@ -874,12 +933,9 @@ inline void variable_copy(Variable &dst, Variable const &src)
         dst.varOffset = src.varOffset;
 }
 
-inline void pomp(int numRegister, uint64_t val)
-{
+inline void pomp(int numRegister, uint64_t val){
     int i;
-
     writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
-
     for(i = (sizeof(uint64_t) * 8) - 1; i > 0; --i)
         if(GET_BIT(val , i) )
             break;
@@ -900,6 +956,8 @@ inline void pomp(int numRegister, uint64_t val)
 }
 
 inline void pomp_addr(int numRegister,Variable const &var){
+
+    writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
     if(!var.array)
         pomp(numRegister, var.addr);
     else
@@ -913,12 +971,9 @@ inline void pomp_addr(int numRegister,Variable const &var){
         }
 }
 
-
 inline void pompBigValue(int numRegister,cln :: cl_I value){
     cln :: cl_I i;
-
     writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
-
     for(i = cln :: integer_length(i); i > 0; --i){
         if(GET_BIGBIT(value , i))
             break;
@@ -939,25 +994,14 @@ inline void pompBigValue(int numRegister,cln :: cl_I value){
         writeAsm("INC " + std :: to_string(numRegister) + "\n");
 }
 
-inline void writeAsm(std :: string const &str)
-{
-    //std :: string strNew = "Line" + std :: to_string(asmline) + "-" + str;
-    //code.push_back(strNew);
-    code.push_back(str);
+inline void writeAsm(std :: string const &str){
+    std :: string strNew = "Line" + std :: to_string(asmline) + "-" + str;
+    code.push_back(strNew);
+    //code.push_back(str);
     ++asmline;
 }
-/*
-inline void writeAsmAndJump(s
-        writeAsm("SHR 2\n"); // line 13td :: string co nst &str, )
-{
 
-    code.push_back(str);
-
-    ++asmline;
-}*/
-
-int compile(const char *infile, const char *outfile)
-{
+int compile(const char *infile, const char *outfile){
     int ret;
     std :: ofstream outstream;
 

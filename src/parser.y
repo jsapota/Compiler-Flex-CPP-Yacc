@@ -42,6 +42,8 @@ inline void writeAsm(std :: string const &str);
         uint64_t addr;
         //zmienilem zakres tablicy
         uint64_t len;
+        //zakres wartosci
+        uint64_t val;
 
         bool isNum;
         bool upToDate;
@@ -49,7 +51,6 @@ inline void writeAsm(std :: string const &str);
         bool init;
         bool iter;
 
-        uint64_t val;
 
         uint64_t offset; /* t[1000] := a + b   offset = 1000 */
         struct Variable *varOffset; /*  t[b] := a + c  varOffset = ptr --> b*/
@@ -365,7 +366,6 @@ expr:
                 exit(1);
             }
         }
-
         // Czysty assembler
         if($1->isNum)
             pomp(1,$1->val); //a
@@ -383,37 +383,47 @@ expr:
             writeAsm("LOAD 3\n");
         }
 
-
+        writeAsm("ZERO 4\n");
+        std :: string result;
+        int jumpline;
 //////////  while a > 1
-
-        //  nieparzyste to ET1
-        std :: cout << "JODD 3 ET" << label++ << std :: endl;
-        //  parzyste to ET2
-        std :: cout << "JUMP ET" << label++ << std :: endl;
+        jumpline = asmline + 2;
+        result = "JODD 3 " + std::to_string(jumpline);
+        writeAsm(result+"\n");  // line 1 //  nieparzyste to ET1
+        jumpline = asmline + 9;
+        result = "JUMP " + std::to_string(jumpline);
+        writeAsm(result+"\n");  // line 2 //  parzyste to ET2
 //////////  ET1 -  a % 2 = 1
-        std :: cout << "COPY 1" << std :: endl; // czym sie rozni Pr0 od R0 - COPY R2 czy STORE R2
-        std :: cout << "ADD 4" << std :: endl; // tutaj sumujemy wolne wyrazy
-        std :: cout << "DEC 2" << std :: endl; // zmniejszamy mnoznik o 1 wiec juz jest parzysy
-        std :: cout << "SHR 2" << std :: endl;
-        std :: cout << "SHL 1" << std :: endl;
-        //  krok while a = a - 1
-        std :: cout << "DEC 3" << std :: endl;
+        writeAsm("STORE 1\n");   // line 3
+        writeAsm("ADD 4\n");    // line 4
+        writeAsm("DEC 2\n");    // line 5
+        writeAsm("SHR 2\n");    // line 6
+        writeAsm("SHL 1\n");    // line 7
+        writeAsm("DEC 3\n");    // line 8
+        writeAsm("SHR 3\n");    // line 9
+        jumpline = asmline + 4;
+        result = "JUMP " + std::to_string(jumpline);
+        writeAsm(result+"\n");  // line 10
 //////////  koniec ifa w ktorym mamy nieparzysty mnoznik
-
 //////////  ET2 warunek ifa z parzystym mnoznikiem
-        std :: cout << "SHR 2" << std :: endl;
-        std :: cout << "SHL 1" << std :: endl;
-        std :: cout << "SHR 2" << std :: endl;
-        //  krok while a = a/2
-        std :: cout << "SHR 3" << std :: endl;
+        writeAsm("SHR 2\n"); // line 11
+        writeAsm("SHL 1\n"); // line 12
+        writeAsm("SHR 3\n"); // line 13 //  krok while a = a/2
 /////////   koniec ifa parzystego
-        std :: cout << "JZERO 3 ET" << label-2 << std :: endl;
+        jumpline = asmline + 4;
+        writeAsm("DEC 3\n"); // line 14 // dla a = 1 konczymy petle
+        result = "JZERO 3 " + std::to_string(jumpline);
+        writeAsm(result+"\n"); // line 15
+        writeAsm("INC 3\n"); // line 16
+        jumpline = asmline - 16;
+        result = "JUMP " + std::to_string(jumpline);
+        writeAsm(result+"\n"); // line 17
 /////////   koniec while
 
 
 /////////  ET3 - END Dodaj wszystkie czynniki wolne ktore sumowalismy w ELSE
-        std :: cout << "COPY 4" << std :: endl;
-        std :: cout << "ADD 2" << std :: endl;
+        writeAsm("STORE 4\n");
+        writeAsm("ADD 1\n");
 ////////   Wynik w R2 - bo nie bylem pewien z konwencja gdzie go wrzucic.
 
     }
@@ -931,10 +941,20 @@ inline void pompBigValue(int numRegister,cln :: cl_I value){
 
 inline void writeAsm(std :: string const &str)
 {
+    //std :: string strNew = "Line" + std :: to_string(asmline) + "-" + str;
+    //code.push_back(strNew);
+    code.push_back(str);
+    ++asmline;
+}
+/*
+inline void writeAsmAndJump(s
+        writeAsm("SHR 2\n"); // line 13td :: string co nst &str, )
+{
+
     code.push_back(str);
 
     ++asmline;
-}
+}*/
 
 int compile(const char *infile, const char *outfile)
 {

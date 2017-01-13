@@ -33,8 +33,8 @@ inline void pomp(int numRegister, uint64_t val);
 #define GET_BIGBIT(n, k)    ((cln :: oddp(n >> k)))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 inline void writeAsm(std :: string const &str);
-inline void jumpLabel(std :: string const &str, int64_t line);
-inline void labelToLine(void);
+inline void jumpLabel(std :: string const &str, int64_t line); // jump to false
+inline void labelToLine(int);
 %}
 
 /* we need own struct so define it before use in union */
@@ -203,12 +203,11 @@ command:
         writeAsm("STORE 1\n"); //
         variables[$1->name].init = true;
     }
-	| IF cond THEN commands ELSE commands ENDIF
-	| WHILE cond DO commands ENDWHILE
-	| FOR VARIABLE FROM value TO value DO commands ENDFOR
-	| FOR VARIABLE FROM value DOWNTO value DO commands ENDFOR
-	| READ identifier ';'
-    {
+	| ifbeg ifmid ifend
+	| whilebeg whileend
+	| forbegTO forendTO
+	| forbegDOWNTO forendDOWNTO
+	| READ identifier ';'{
         /*
             Scenariusz:
 
@@ -218,15 +217,11 @@ command:
          */
 
          writeAsm("GET 1\n");
-
          pomp_addr(0, *$2);
-
          writeAsm("STORE 1\n");
-
          variables[$2->name].init = true;
     }
-	| WRITE value ';'
-    {
+	| WRITE value ';'{
         /*
             Scenariusz:
 
@@ -250,14 +245,47 @@ command:
             pomp(1, $2->val);
             writeAsm("PUT 1\n");
         }
-
     }
 	| SKIP ';'
 ;
 
+ifbeg:
+    IF cond THEN{}
+ifmid:
+    commands ELSE{
+        jumpLabel()
+    }
+ifend:
+    commands ENDIF{
+
+    }
+whilebeg:
+    WHILE cond DO{
+
+    }
+whileend:
+    commands ENDWHILE{
+
+    }
+forbegTO:
+    FOR VARIABLE FROM value TO value DO{
+
+    }
+forendTO:
+    commands ENDFOR{
+
+    }
+forbegDOWNTO:
+    FOR VARIABLE FROM value DOWNTO value DO{
+
+    }
+forendDOWNTO:
+    commands ENDFOR{
+
+    }
+
 expr:
-	value
-    {
+	value{
             if($1->isNum) {
                 pomp(1,$1->val);
             }
@@ -616,7 +644,7 @@ expr:
 
     // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
 cond:
-	value '=' value       {
+	value '=' value{
 
         // Napomuj R2 = a, R3 = a, R4 = b
         if($1->isNum){
@@ -659,8 +687,7 @@ cond:
 
 
   }
-	| value NE value
-    {
+	| value NE value{
         // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
         // Napomuj R2 = a, R3 = a, R4 = b
         if($1->isNum){
@@ -700,8 +727,7 @@ cond:
         //ET3 - END
         std :: cout << "HALT"  << std :: endl;
     }
-	| value '<' value
-    {
+	| value '<' value{
         //R1 = a MEM[R0] = b
         if($1->isNum){
             pomp(1,$1->val); //a
@@ -727,12 +753,10 @@ cond:
 
         /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
-
         jumpLabel("JUMP ", asmline);
-        jumpLabel("", FAKE_LABEL);
+
     }
-	| value '>' value
-    {
+	| value '>' value{
         if($3->isNum){
             pomp(1,$3->val); //a
         }
@@ -757,12 +781,9 @@ cond:
 
         /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
-
         jumpLabel("JUMP ", asmline);
-        jumpLabel("", FAKE_LABEL);
     }
-	| value LE value
-    {
+	| value LE value{
         //R1 = a MEM[R0] = b
         if($1->isNum){
             pomp(1,$1->val); //a
@@ -789,10 +810,8 @@ cond:
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
 
         jumpLabel("JUMP ", asmline);
-        jumpLabel("", FAKE_LABEL);
     }
-	| value GE value
-    {
+	| value GE value{
 
         if($3->isNum){
             pomp(1,$3->val); //a
@@ -819,7 +838,6 @@ cond:
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
 
         jumpLabel("JUMP ", asmline);
-        jumpLabel("", FAKE_LABEL);
     }
 ;
 

@@ -27,7 +27,7 @@ std :: vector <std :: string> code;
 std :: stack <int64_t> labels;
 /* we need fake label to fullfits condition rules */
 #define FAKE_LABEL  -1ll
-inline void pomp(int numRegister, cln :: cl_I val);
+inline void pomp(int numRegister, uint64_t val);
 /* 0 iff ikty bit w n = 0, else 1 */
 #define GET_BIT(n , k)      (((n) & (1ull << k)) >> k )
 #define GET_BIGBIT(n, k)    ((cln :: oddp(n >> k)))
@@ -61,7 +61,7 @@ inline void labelToLine(void);
         //zmienilem zakres tablicy
         cln :: cl_I len;
         //zakres wartosci
-        cln :: cl_I val;
+        uint64_t val;
 
         bool isNum;
         bool upToDate;
@@ -350,7 +350,7 @@ expr:
                 pomp_addr(0,*$1); //R0 = a.addr;
                 writeAsm("LOAD 1\n"); // R2 = a;
                 pomp(2,$3->val); // R0 = b;
-                pomp(0,address + 1);
+                pompBigValue(0,address + 1);
                 writeAsm("STORE 2\n");
                 writeAsm("SUB 1\n"); //R2 = a + b
             }
@@ -486,7 +486,7 @@ expr:
             writeAsm("LOAD 2\n");
             writeAsm("LOAD 3\n");
         }
-        pomp(0,address);
+        pompBigValue(0,address);
         address = address + 1;
 ////////// Sprawdzmy czy jest sens dzielic
 ////////// a < b lub a + 1 <= b
@@ -712,7 +712,7 @@ cond:
         }
         if($3->isNum){
             pomp(2,$3->val); //b
-            pomp(0, address + 1);
+            pompBigValue(0, address + 1);
             writeAsm("STORE 2\n");
         }
         else{
@@ -742,7 +742,7 @@ cond:
         }
         if($1->isNum){
             pomp(2,$1->val); //b
-            pomp(0, address + 1);
+            pompBigValue(0, address + 1);
             writeAsm("STORE 2\n");
         }
         else{
@@ -773,7 +773,7 @@ cond:
         }
         if($3->isNum){
             pomp(2,$3->val); //b
-            pomp(0, address + 1);
+            pompBigValue(0, address + 1);
             writeAsm("STORE 2\n");
         }
         else{
@@ -803,7 +803,7 @@ cond:
         }
         if($1->isNum){
             pomp(2,$1->val); //b
-            pomp(0, address + 1);
+            pompBigValue(0, address + 1);
             writeAsm("STORE 2\n");
         }
         else{
@@ -951,39 +951,39 @@ inline void variable_copy(Variable &dst, Variable const &src){
         dst.varOffset = src.varOffset;
 }
 
-inline void pomp(int numRegister, cln :: cl_I value){
-        int i;
-        i = cln :: integer_length(i);
-        std :: cout << i << std :: endl;
-        writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
-        for(; i > 0; --i){
-            if(GET_BIGBIT(value , i))
-                break;
-        }
-        for(; i > 0; --i)
-            if(GET_BIGBIT(value , i))
-            {
-                writeAsm("INC " + std :: to_string(numRegister) + "\n");
-                writeAsm("SHL " + std :: to_string(numRegister) + "\n");
-            }
-            else
-            {
-                writeAsm("SHL " + std :: to_string(numRegister) + "\n");
-            }
-        if(GET_BIGBIT(value, i))
+inline void pomp(int numRegister, uint64_t val){
+    int i;
+    writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
+    for(i = (sizeof(uint64_t) * 8) - 1; i > 0; --i)
+        if(GET_BIT(val , i) )
+            break;
+
+    for(; i > 0; --i)
+        if( GET_BIT(val , i) )
+        {
             writeAsm("INC " + std :: to_string(numRegister) + "\n");
+            writeAsm("SHL " + std :: to_string(numRegister) + "\n");
+        }
+        else
+        {
+            writeAsm("SHL " + std :: to_string(numRegister) + "\n");
+        }
+
+    if(GET_BIT(val, i))
+        writeAsm("INC " + std :: to_string(numRegister) + "\n");
 }
 
 inline void pomp_addr(int numRegister,Variable const &var){
+
     writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
     if(!var.array)
-        pomp(numRegister, var.addr);
+        pompBigValue(numRegister, var.addr);
     else
         if ( var.varOffset == NULL )
-            pomp(numRegister, var.addr + var.offset);
+            pompBigValue(numRegister, var.addr + var.offset);
         else{
-            pomp(4,var.addr);
-            pomp(0,var.varOffset->addr);
+            pompBigValue(4,var.addr);
+            pompBigValue(0,var.varOffset->addr);
             writeAsm("ADD 4 \n");
             writeAsm("COPY 4\n");
         }

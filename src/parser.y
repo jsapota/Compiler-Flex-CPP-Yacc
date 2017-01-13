@@ -2,21 +2,39 @@
 #include <common.h>
 #include <fstream>
 #include <vector>
+#include <stack>
 #include <cln/integer.h>
 int yylex(void);
 void yyerror(const char *msg);
 //zmienilem zakres addresu
-uint64_t address = 0;
+cln :: cl_I address = 0;
 static int label = 0;
 extern FILE *yyin;
 uint64_t asmline = 0;
 std :: vector <std :: string> code;
-inline void pomp(int numRegister, uint64_t val);
+/*
+    stack with lines from we want to jump HERE
+    Usage:
+    we want to jzero 2 (20) but now we dont know line number
+    Let @line is the current line, ( jzero 2 (20) )
+    1. Create string : jzero 2(space)
+    2. Call jumpLabel(created string, @line)
+    3. When you go to the wanted line, call labelToLine()
+    IMPORTANT:
+    We need alligned lables, so if we use in ne, eq 2x jump to FALSE label,
+    we need create FAKE_LABEL in others conditions
+*/
+std :: stack <int64_t> labels;
+/* we need fake label to fullfits condition rules */
+#define FAKE_LABEL  -1ll
+inline void pomp(int numRegister, cln :: cl_I val);
 /* 0 iff ikty bit w n = 0, else 1 */
 #define GET_BIT(n , k)      (((n) & (1ull << k)) >> k )
 #define GET_BIGBIT(n, k)    ((cln :: oddp(n >> k)))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 inline void writeAsm(std :: string const &str);
+inline void jumpLabel(std :: string const &str, int64_t line);
+inline void labelToLine(void);
 %}
 
 /* we need own struct so define it before use in union */
@@ -39,11 +57,11 @@ inline void writeAsm(std :: string const &str);
 
         int reg;
         //zmienilem zakres addresu
-        uint64_t addr;
+        cln :: cl_I addr;
         //zmienilem zakres tablicy
-        uint64_t len;
+        cln :: cl_I len;
         //zakres wartosci
-        uint64_t val;
+        cln :: cl_I val;
 
         bool isNum;
         bool upToDate;
@@ -120,7 +138,8 @@ vdeclar:
         Variable var;
         var.name = std :: string($2.str);
         var.reg = -1;
-        var.addr = address++;
+        var.addr = address;
+        address = address + 1;
         var.len = 0;
         var.isNum = false;
         var.array = false;
@@ -268,10 +287,11 @@ expr:
                 // stala i stala
             if($1->isNum && $3->isNum){
                 /* TODO: Zmiana na BigValue ( czyli cln a = $1->val, b = $3->val, pompBig(2, a + b)) */
-                    pomp(1, $1->val + $3->val);
+                    //pomp(1, $1->val + $3->val);
                     cln :: cl_I a = $1->val;
                     cln :: cl_I b = $3->val;
-                    //pompBigValue(1,a + b);
+                    pompBigValue(1,a + b);
+                    //std :: cout << a << "+" << b << std :: endl;
 
             }
             else{
@@ -466,7 +486,8 @@ expr:
             writeAsm("LOAD 2\n");
             writeAsm("LOAD 3\n");
         }
-        pomp(0,address++);
+        pomp(0,address);
+        address = address + 1;
 ////////// Sprawdzmy czy jest sens dzielic
 ////////// a < b lub a + 1 <= b
         writeAsm("INC 4\n");       // ++a
@@ -707,8 +728,8 @@ cond:
         /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
 
-        /* FALSE ETYKIETA */
-        std :: cout << "JUMP ET" << label++ << std :: endl;
+        jumpLabel("JUMP ", asmline);
+        jumpLabel("", FAKE_LABEL);
     }
 	| value '>' value
     {
@@ -737,8 +758,8 @@ cond:
         /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
 
-        /* FALSE ETYKIETA */
-        std :: cout << "JUMP ET" << label++ << std :: endl;
+        jumpLabel("JUMP ", asmline);
+        jumpLabel("", FAKE_LABEL);
     }
 	| value LE value
     {
@@ -767,8 +788,8 @@ cond:
         /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
 
-        /* FALSE ETYKIETA */
-        std :: cout << "JUMP ET" << label++ << std :: endl;
+        jumpLabel("JUMP ", asmline);
+        jumpLabel("", FAKE_LABEL);
     }
 	| value GE value
     {
@@ -797,29 +818,25 @@ cond:
         /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
 
-        /* FALSE ETYKIETA */
-        std :: cout << "JUMP ET" << label++ << std :: endl;
-
+        jumpLabel("JUMP ", asmline);
+        jumpLabel("", FAKE_LABEL);
     }
 ;
 
 value:
-	NUM
-    {
+	NUM{
         $$ = new Variable;
         $$->name = $1.str;
         $$->isNum = true;
         $$->val = atoll($1.str);
     }
-	| identifier
-    {
+	| identifier{
         $$ = $1;
     }
 ;
 
 identifier:
-	VARIABLE
-    {
+	VARIABLE{
         /* czy DECLARED  */
         auto it = variables.find(std :: string($1.str));
         if (it == variables.end())
@@ -837,8 +854,7 @@ identifier:
         $$ = new Variable;
         variable_copy(*$$, var);
     }
-	| VARIABLE '[' VARIABLE ']'
-    {
+	| VARIABLE '[' VARIABLE ']'{
 
         /* czy DECLARED  */
         auto it = variables.find(std :: string($1.str));
@@ -935,30 +951,30 @@ inline void variable_copy(Variable &dst, Variable const &src){
         dst.varOffset = src.varOffset;
 }
 
-inline void pomp(int numRegister, uint64_t val){
-    int i;
-    writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
-    for(i = (sizeof(uint64_t) * 8) - 1; i > 0; --i)
-        if(GET_BIT(val , i) )
-            break;
-
-    for(; i > 0; --i)
-        if( GET_BIT(val , i) )
-        {
+inline void pomp(int numRegister, cln :: cl_I value){
+        int i;
+        i = cln :: integer_length(i);
+        std :: cout << i << std :: endl;
+        writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
+        for(; i > 0; --i){
+            if(GET_BIGBIT(value , i))
+                break;
+        }
+        for(; i > 0; --i)
+            if(GET_BIGBIT(value , i))
+            {
+                writeAsm("INC " + std :: to_string(numRegister) + "\n");
+                writeAsm("SHL " + std :: to_string(numRegister) + "\n");
+            }
+            else
+            {
+                writeAsm("SHL " + std :: to_string(numRegister) + "\n");
+            }
+        if(GET_BIGBIT(value, i))
             writeAsm("INC " + std :: to_string(numRegister) + "\n");
-            writeAsm("SHL " + std :: to_string(numRegister) + "\n");
-        }
-        else
-        {
-            writeAsm("SHL " + std :: to_string(numRegister) + "\n");
-        }
-
-    if(GET_BIT(val, i))
-        writeAsm("INC " + std :: to_string(numRegister) + "\n");
 }
 
 inline void pomp_addr(int numRegister,Variable const &var){
-
     writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
     if(!var.array)
         pomp(numRegister, var.addr);
@@ -974,7 +990,7 @@ inline void pomp_addr(int numRegister,Variable const &var){
 }
 
 inline void pompBigValue(int numRegister,cln :: cl_I value){
-    cln :: cl_I i;
+    cln :: cl_I i = value;
     writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
     for(i = cln :: integer_length(i); i > 0; --i){
         if(GET_BIGBIT(value , i))
@@ -997,10 +1013,26 @@ inline void pompBigValue(int numRegister,cln :: cl_I value){
 }
 
 inline void writeAsm(std :: string const &str){
-    std :: string strNew = "Line" + std :: to_string(asmline) + "-" + str;
-    code.push_back(strNew);
-    //code.push_back(str);
+    //std :: string strNew = "Line" + std :: to_string(asmline) + "-" + str;
+    //code.push_back(strNew);
+    code.push_back(str);
     ++asmline;
+}
+
+inline void jumpLabel(std :: string const &str, int64_t line){
+    labels.push(line);
+
+    if(line != FAKE_LABEL)
+        writeAsm(str);
+}
+
+inline void labelToLine(){
+    int64_t line;
+    line = labels.top();
+    labels.pop();
+
+    if(line != FAKE_LABEL)
+        code[line] += std :: to_string(line) + "\n";
 }
 
 int compile(const char *infile, const char *outfile){

@@ -21,8 +21,14 @@ std :: vector <std :: string> code;
     2. Call jumpLabel(created string, @line)
     3. When you go to the wanted line, call labelToLine()
     IMPORTANT:
+
+    OLD:
     We need alligned lables, so if we use in ne, eq 2x jump to FALSE label,
     we need create FAKE_LABEL in others conditions
+
+    CURRENT:
+    1 cond <--> 1 label
+
 */
 std :: stack <int64_t> labels;
 /* we need fake label to fullfits condition rules */
@@ -34,7 +40,7 @@ inline void pomp(int numRegister, uint64_t val);
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 inline void writeAsm(std :: string const &str);
 inline void jumpLabel(std :: string const &str, int64_t line); // jump to false
-inline void labelToLine(int);
+inline void labelToLine(uint64_t line);
 %}
 
 /* we need own struct so define it before use in union */
@@ -250,26 +256,36 @@ command:
 ;
 
 ifbeg:
-    IF cond THEN{}
+    IF cond THEN{
+        /* tutaj i tak skompilowalismy conda wiec nic nie robimy */
+    }
 ifmid:
     commands ELSE{
-        jumpLabel()
+        /*
+            poprzednia labelka chce skoczyc do else
+            + wystawiamy nowa labelke do endif ( czyli omijamy elsa)
+        */
+
+        labelToLine(asmline + 1);
+        jumpLabel("JUMP ",asmline);
     }
 ifend:
     commands ENDIF{
-
+        /* label z else zamieniamy na linie */
+            labelToLine(asmline);
     }
 whilebeg:
     WHILE cond DO{
-
+        /* tutaj znowu nic nie robimy bo interesuje nas tylko cond */
     }
 whileend:
     commands ENDWHILE{
-
+        /* label z conda zamieniamy na linie */
+        labelToLine(asmline);
     }
 forbegTO:
     FOR VARIABLE FROM value TO value DO{
-
+        /* deklaracja VAR juz jest wiec zapalamy flage iteratora */
     }
 forendTO:
     commands ENDFOR{
@@ -277,7 +293,7 @@ forendTO:
     }
 forbegDOWNTO:
     FOR VARIABLE FROM value DOWNTO value DO{
-
+        /* deklaracja VAR juz jest wiec zapalamy flage iteratora */
     }
 forendDOWNTO:
     commands ENDFOR{
@@ -1044,13 +1060,13 @@ inline void jumpLabel(std :: string const &str, int64_t line){
         writeAsm(str);
 }
 
-inline void labelToLine(){
-    int64_t line;
-    line = labels.top();
+inline void labelToLine(uint64_t line){
+    int64_t jline;
+    jline = labels.top();
     labels.pop();
 
-    if(line != FAKE_LABEL)
-        code[line] += std :: to_string(line) + "\n";
+    if(jline != FAKE_LABEL)
+        code[jline] += std :: to_string(line) + "\n";
 }
 
 int compile(const char *infile, const char *outfile){

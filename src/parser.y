@@ -121,8 +121,7 @@ program:
 
 vdeclar:
 	%empty
-	| vdeclar VARIABLE
-    {
+	| vdeclar VARIABLE {
         /*
             reg = -1;
             addr = -1;
@@ -155,8 +154,7 @@ vdeclar:
         var.val = 0;
         variables.insert ( std::pair<std :: string,Variable>(var.name,var) );
     }
-	| vdeclar VARIABLE '[' NUM ']'
-    {
+	| vdeclar VARIABLE '[' NUM ']'{
         /*
             reg = -1;
             addr = -1;
@@ -200,8 +198,7 @@ commands:
 ;
 
 command:
-	identifier ASSIGN expr ';'
-    {
+	identifier ASSIGN expr ';' {
         /* Konwencja mowi ze wynik expr bedzie w R1  */
 
         /* ustaw R0 na addr identifiera  WIEMY ZE TO VAR */
@@ -519,62 +516,72 @@ expr:
             writeAsm("LOAD 2\n");
             writeAsm("LOAD 3\n");
         }
+
         pompBigValue(0,address);
         address = address + 1;
-////////// czy jest sens
-        writeAsm("INC 4\n");       // ++a
+////////// czy jest sens ///////////////////////////////////////////////////////
+        writeAsm("INC 4\n");    // ++a
         writeAsm("STORE 2\n");
-        writeAsm("SUB 4\n");      //R1 = R1 - memR0 = a + 1 - b = 0
-        jumpline = asmline + 35;
-        result = "JZERO 4 " + std::to_string(jumpline);
-        writeAsm(result+"\n");      //Jezeli R4 == 0 to zwracamy 0  i styka
+        writeAsm("SUB 4\n");    //R1 = R1 - memR0 = a + 1 - b = 0
+        /*  Jezeli nie ma sensu dzielic to skocz do etykiety etykieta nizej*/
+        jumpLabel("JZERO 4 ", asmline);
         writeAsm("ZERO 4\n");   // line 1
-//////////  while a > b
-        writeAsm("STORE 2\n");  // line 2
-        writeAsm("SUB 1\n");    // line 3
-        jumpline = asmline + 8;
+////////////////////////////////////////////////////////////////////////////////
+        pompBigValue(0,address);
+        address = address + 1;
+        writeAsm("ZERO 4\n");
+        writeAsm("INC 4\n");
+        //////////  while a > b
+        writeAsm("ZERO 3\n");   // line 1   BKup a
+        writeAsm("STORE 1\n");  // line 2   BKup a
+        writeAsm("ADD 3\n");    // line 3   BKup a
+        writeAsm("STORE 2\n");  // line 4
+        writeAsm("SUB 1\n");    // line 5
+        // jezeli a < b to skocz
+        jumpline = asmline + 5;
         result = "JZERO 1 " + std::to_string(jumpline);
-        writeAsm(result+"\n");  // line 4
-        writeAsm("ADD 1\n");    // line 5
-        jumpline = asmline + 2;
-        result = "JZERO 4 " + std::to_string(jumpline); // Jezeli R4 == 0 INC
         writeAsm(result+"\n");  // line 6
-        jumpline = asmline + 2;
-        result = "JUMP " + std::to_string(jumpline);
-        writeAsm(result+"\n");  // line 7               // jezeli R0 > 0 to pomin
-        writeAsm("INC 4\n");    // line 8
+        // jezeli a > b to cofnij SUB 1 aby zachowac R1 = a
+        writeAsm("ADD 1\n");    // line 7
 //////////  akcje z while
-        writeAsm("SHL 2\n");    // line 9               // R2 = b * 2
-        writeAsm("SHL 4\n");    // line 10              // R4 = nasz przyszly wynik
-        jumpline = asmline - 8;
+        writeAsm("SHL 2\n");    // line 8              // R2 = b * 2
+        writeAsm("SHL 4\n");    // line 9              // R4 = nasz przyszly wynik
+        jumpline = asmline - 9;
         result = "JUMP " + std::to_string(jumpline);    // dopoki mozna to
-        writeAsm(result+"\n");  // line 11
-//////////  koniec while
-//////////  a <= b
-        writeAsm("SHR 2\n");    // line 12
-        writeAsm("SHR 4\n");    // line 13
-        writeAsm("STORE 2\n");  // line 14
-        writeAsm("SUB 1\n");    // line 15  // 48 - 40  - > R1 = 8
-        writeAsm("ZERO 2\n");   // line 16
-        writeAsm("STORE 3\n");  // line 17
-        writeAsm("ADD 2\n");    // line 18  //R2 = 5
+        writeAsm(result+"\n");  // line 10
+//////////  koniec while bo a <= b
+        writeAsm("ZERO 1\n");   // line 11  BKup a
+        writeAsm("STORE 3\n");  // line 12  BKup a
+        writeAsm("ADD 1\n");    // line 13  BKup a
+        writeAsm("SHR 2\n");    // line 14  cofnij SHL na dzelniku
+        writeAsm("SHR 4\n");    // line 15  cofnij SHL na wyniku
+        writeAsm("STORE 2\n");  // line 16  // memR0 = b
+        writeAsm("SUB 1\n");    // line 17  // R1 = R1 - memR0
+        // wczytujemy spowrotem do R2 = b
+        if($3->isNum){
+            pomp(2,$3->val); //b
+        }
+        else{
+            pomp_addr(0,*$3);
+            writeAsm("LOAD 2\n");
+        }
 ////////// koniec pierwszej operacji
 ////////// drugi while
-        writeAsm("STORE 1\n");  // line 19 // memR0 = a
-        writeAsm("ZERO 3\n");   // line 20
-        writeAsm("ADD 3\n");    // line 21 // R3 = a
-        writeAsm("STORE 2\n");  // line 22 // memR0 = b
-        writeAsm("SUB 1\n");    // line 23 // R1 - b
+        writeAsm("STORE 1\n");  // line 1 // memR0 = a
+        writeAsm("ZERO 3\n");   // line 2 // BKup nowego a
+        writeAsm("ADD 3\n");    // line 3 // R3 = a
+        writeAsm("STORE 2\n");  // line 4 // memR0 = b
+        writeAsm("SUB 1\n");    // line 5 // R1 - b
         jumpline = asmline + 3;
         result = "JZERO 1 " + std::to_string(jumpline); // nie wiemy czy a == b
-        writeAsm(result+"\n");  // line 24
-        writeAsm("INC 4\n");    // line 25 // R4 ++
-        jumpline = asmline -6;
+        writeAsm(result+"\n");  // line 6
+        writeAsm("INC 4\n");    // line 7 // R4 ++
+        jumpline = asmline - 7;
         result = "JUMP " + std::to_string(jumpline); // a - b == 0 ?
-        writeAsm(result+"\n");  // line 26
+        writeAsm(result+"\n");  // line 8
 ////////// w opor nie optymalnie ale trudno
-        writeAsm("INC 3\n");    // line 27      // R3 = a + 1
-        writeAsm("SUB 3\n");    // line 28      // R3 = a + 1 - b
+        writeAsm("INC 3\n");    // line 9      // R3 = a + 1
+        writeAsm("SUB 3\n");    // line 10     // R3 = a + 1 - b
         jumpline = asmline + 2;
         result = "JZERO 3 " + std::to_string(jumpline); // nie wiemy czy a == b
         writeAsm(result+"\n");  // line 29
@@ -582,16 +589,12 @@ expr:
         writeAsm("ZERO 1\n");   // line 31
         writeAsm("STORE 4\n");  // line 32
         writeAsm("ADD 1\n");    // line 33
-        jumpline = asmline + 2;
-        result = "JUMP " + std::to_string(jumpline); // Przeskocz zerowanie R1
-        writeAsm(result+"\n");  // line 34
-/////////   koniec dzielnia...
-/////////   jezeli nie bylo sensu to zwroc zero
-        writeAsm("ZERO 1\n");   // line 35
-
-
-
-
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
+/////////   koniec dzielenia... przeskocz porazke //////////////////////////////
+/////////   jezeli nie bylo sensu to zwroc zero ////////////////////////////////
+        labelToLine(asmline);
+        writeAsm("ZERO 1\n");
+////////////////////////////////////////////////////////////////////////////////
     }
 	| value '%' value  {
             if(!$1->isNum){

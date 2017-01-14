@@ -287,23 +287,20 @@ forbegTO:
     FOR VARIABLE FROM value TO value DO{
         /* deklaracja VAR juz jest wiec zapalamy flage iteratora */
         // tak wystarczy?
-        $2.iter = true;
+        auto it = variables[$2.str];
+        it.iter = true;
     }
 forendTO:
     commands ENDFOR{
-            // gasimy flage
-            $2.iter = false;
     }
 forbegDOWNTO:
     FOR VARIABLE FROM value DOWNTO value DO{
         /* deklaracja VAR juz jest wiec zapalamy flage iteratora */
         // tak wystarczy?
-        $2.iter = true;
+        variables[$2.str].iter = true;
     }
 forendDOWNTO:
     commands ENDFOR{
-        // gasimy flage
-        $2.iter = false;
     }
 
 expr:
@@ -486,9 +483,8 @@ expr:
     }
 	| value '/' value  {
         if(!$1->isNum){
-        auto it = variables[$1->name];
-        if (!it.init)
-            {
+            auto it = variables[$1->name];
+            if (!it.init){
                 std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
@@ -525,6 +521,7 @@ expr:
         }
         pompBigValue(0,address);
         address = address + 1;
+////////// czy jest sens
         writeAsm("INC 4\n");       // ++a
         writeAsm("STORE 2\n");
         writeAsm("SUB 4\n");      //R1 = R1 - memR0 = a + 1 - b = 0
@@ -676,7 +673,7 @@ cond:
         writeAsm("STORE 2\n");      // b -> memR0
         writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
         writeAsm("STORE 3\n");      // a -> memR0
-        writeAsm("SUB 1")           // R2 = b - memR0 = b - a
+        writeAsm("SUB 1");           // R2 = b - memR0 = b - a
         // a - b = 0 ?
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek
         // skocz false
@@ -711,7 +708,7 @@ cond:
         writeAsm("STORE 2\n");      // b -> memR0
         writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
         writeAsm("STORE 3\n");      // a -> memR0
-        writeAsm("SUB 1")           // R2 = b - memR0 = b - a
+        writeAsm("SUB 1");           // R2 = b - memR0 = b - a
         // a - b != 0 ?
         writeAsm("JZERO 1 " + std :: to_string(asmline + 3) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek
         // b - a != 0 ?

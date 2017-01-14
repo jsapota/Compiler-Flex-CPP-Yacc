@@ -436,7 +436,6 @@ expr:
                 exit(1);
             }
         }
-        // Czysty assembler
         if($1->isNum)
             pomp(1,$1->val); //a
         else{
@@ -452,18 +451,15 @@ expr:
             writeAsm("LOAD 2\n");
             writeAsm("LOAD 3\n");
         }
-
         writeAsm("ZERO 4\n");
         std :: string result;
         int jumpline;
-//////////  while a > 1
         jumpline = asmline + 2;
         result = "JODD 3 " + std::to_string(jumpline);
         writeAsm(result+"\n");  // line 1 //  nieparzyste to ET1
         jumpline = asmline + 9;
         result = "JUMP " + std::to_string(jumpline);
         writeAsm(result+"\n");  // line 2 //  parzyste to ET2
-//////////  ET1 -  a % 2 = 1
         writeAsm("STORE 1\n");   // line 3
         writeAsm("ADD 4\n");    // line 4
         writeAsm("DEC 2\n");    // line 5
@@ -474,12 +470,9 @@ expr:
         jumpline = asmline + 4;
         result = "JUMP " + std::to_string(jumpline);
         writeAsm(result+"\n");  // line 10
-//////////  koniec ifa w ktorym mamy nieparzysty mnoznik
-//////////  ET2 warunek ifa z parzystym mnoznikiem
         writeAsm("SHR 2\n"); // line 11
         writeAsm("SHL 1\n"); // line 12
         writeAsm("SHR 3\n"); // line 13 //  krok while a = a/2
-/////////   koniec ifa parzystego
         jumpline = asmline + 4;
         writeAsm("DEC 3\n"); // line 14 // dla a = 1 konczymy petle
         result = "JZERO 3 " + std::to_string(jumpline);
@@ -488,14 +481,8 @@ expr:
         jumpline = asmline - 16;
         result = "JUMP " + std::to_string(jumpline);
         writeAsm(result+"\n"); // line 17
-/////////   koniec while
-
-
-/////////  ET3 - END Dodaj wszystkie czynniki wolne ktore sumowalismy w ELSE
         writeAsm("STORE 4\n");
         writeAsm("ADD 1\n");
-////////   Wynik w R2 - bo nie bylem pewien z konwencja gdzie go wrzucic.
-
     }
 	| value '/' value  {
         if(!$1->isNum){
@@ -538,8 +525,6 @@ expr:
         }
         pompBigValue(0,address);
         address = address + 1;
-////////// Sprawdzmy czy jest sens dzielic
-////////// a < b lub a + 1 <= b
         writeAsm("INC 4\n");       // ++a
         writeAsm("STORE 2\n");
         writeAsm("SUB 4\n");      //R1 = R1 - memR0 = a + 1 - b = 0
@@ -664,7 +649,6 @@ expr:
     }
 ;
 
-    // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
 cond:
 	value '=' value{
 
@@ -687,7 +671,8 @@ cond:
         }
 
         // R0 = wolny address
-        pomp(0,address++);
+        pompBigValue(0,address);
+        address = address + 1;
         writeAsm("STORE 2\n");      // b -> memR0
         writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
         writeAsm("STORE 3\n");      // a -> memR0
@@ -721,7 +706,8 @@ cond:
             writeAsm("LOAD 4\n");
         }
         // R0 = wolny address
-        pomp(0,address++);
+        pompBigValue(0,address);
+        address = address + 1;
         writeAsm("STORE 2\n");      // b -> memR0
         writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
         writeAsm("STORE 3\n");      // a -> memR0

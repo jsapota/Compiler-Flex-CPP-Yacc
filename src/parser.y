@@ -286,18 +286,24 @@ whileend:
 forbegTO:
     FOR VARIABLE FROM value TO value DO{
         /* deklaracja VAR juz jest wiec zapalamy flage iteratora */
+        // tak wystarczy?
+        $2.iter = true;
     }
 forendTO:
     commands ENDFOR{
-
+            // gasimy flage
+            $2.iter = false;
     }
 forbegDOWNTO:
     FOR VARIABLE FROM value DOWNTO value DO{
         /* deklaracja VAR juz jest wiec zapalamy flage iteratora */
+        // tak wystarczy?
+        $2.iter = true;
     }
 forendDOWNTO:
     commands ENDFOR{
-
+        // gasimy flage
+        $2.iter = false;
     }
 
 expr:
@@ -664,45 +670,37 @@ cond:
 
         // Napomuj R2 = a, R3 = a, R4 = b
         if($1->isNum){
-            pomp(2,$1->val); //a
+            pomp(1,$1->val); //a
             pomp(3,$1->val); //a
         }
         else{
             pomp_addr(0,*$1);
-            writeAsm("LOAD 2\n");
+            writeAsm("LOAD 1\n");
             writeAsm("LOAD 3\n");
         }
         if($3->isNum){
-            pomp(4,$3->val); //b
+            pomp(2,$3->val); //b
         }
         else{
             pomp_addr(0,*$3);
-            writeAsm("LOAD 4\n"); //b
+            writeAsm("LOAD 2\n"); //b
         }
 
-        //Czy b <= a
-        writeAsm("STORE 4\n");     // b -> memR0
-        writeAsm("SUB 2\n"); //b   // R2 = a - memR0 = a - b
-        std :: cout << "JZERO 2" << " ET" << label++ << std :: endl; // jezeli R2 == 0 to skocz do ET1
-        std :: cout << "JUMP ET" << label++ << std :: endl; //  skocz do ET2 - FALSE
-
-        // ET1 - pierwszy warunek spelniony - teraz drugi warunek
-        //CZY b - a == 0 ??
-        std :: cout << "STORE" << " 2" << std :: endl;// a -> memR0
-        std :: cout << "SUB" << " 3" << std :: endl;// R3 = a - memR0 = a - b
-        std :: cout << "JZERO 3" << " ET" << label++ << std :: endl; // jezeli R3 == 0 to skocz do ET3 czyli rownosc spelniona
-        std :: cout << "JUMP ET" << label-- << std :: endl; //  // ma skoczyc do 2 a nie do 3 wiec label--
-
-
-        // ET2 - nie spelnione - wrzuc wartosc do R0 - false i skocz do etykiety ET3
-        //a > b lub b > a
-        std :: cout << "JUMP ET" << label++ << std :: endl;
-
-        //ET3 - END
-        std :: cout << "HALT"  << std :: endl;
-
-
-  }
+        // R0 = wolny address
+        pomp(0,address++);
+        writeAsm("STORE 2\n");      // b -> memR0
+        writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
+        writeAsm("STORE 3\n");      // a -> memR0
+        writeAsm("SUB 1")           // R2 = b - memR0 = b - a
+        // a - b = 0 ?
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek
+        // skocz false
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");       // a > b wiec false
+        // b - a = 0 ?
+        writeAsm("JZERO 2 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R2 == 0 to mamy spelniony warunek
+        jumpLabel("JUMP ", asmline);  // false
+        // tutaj juz jest true to mamy skoczyc
+    }
 	| value NE value{
         // W R0 lub w R1 bedzie wynik 1 - true, 0 - false
         // Napomuj R2 = a, R3 = a, R4 = b
@@ -722,26 +720,20 @@ cond:
             pomp_addr(0,*$3);
             writeAsm("LOAD 4\n");
         }
-
-        //Czy b => a
-        std :: cout << "STORE" << " 4" << std :: endl;       // b -> memR0
-        std :: cout << "SUB" << " 2" << std :: endl;        // R2 = a - memR0 = a - b
-        std :: cout << "JZERO 2" << " ET" << label++ << std :: endl; // b > a lub b == a
-        label += 2;
-        std :: cout << "JUMP ET" << label << std :: endl; //  a-b > 0 to mamy nierownosc wiec skocz do ET3 - TRUE
-
-        // ET1 wiec b >= a
-        //CZY a == b?
-        std :: cout << "STORE" << " 2" << std :: endl;// a-> memR0
-        std :: cout << "SUB" << " 3" << std :: endl;// R3 = b - memR0 = b - a
-        std :: cout << "JZERO 3" << " ET" << label--  << std :: endl; // jezeli R3 == 0 to skocz do ET2 bo FALSE
-        std :: cout << "JUMP ET" << label++ << std :: endl; //  skaczemy do ET3 - mamy nierownosc
-
-        //ET2
-        std :: cout << "JUMP ET" << label << std :: endl;
-
-        //ET3 - END
-        std :: cout << "HALT"  << std :: endl;
+        // R0 = wolny address
+        pomp(0,address++);
+        writeAsm("STORE 2\n");      // b -> memR0
+        writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
+        writeAsm("STORE 3\n");      // a -> memR0
+        writeAsm("SUB 1")           // R2 = b - memR0 = b - a
+        // a - b != 0 ?
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 3) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek
+        // b - a != 0 ?
+        writeAsm("JZERO 2 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R2 == 0 to mamy spelniony warunek
+        // jezeli oba JZER0 nic nie zrobily to NE wiec przeskocz do jumpLabel
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");       // a > b wiec false
+        jumpLabel("JUMP ", asmline);  // false
+        // tutaj juz jest true to mamy skoczyc
     }
 	| value '<' value{
         //R1 = a MEM[R0] = b
@@ -770,27 +762,25 @@ cond:
         /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
         jumpLabel("JUMP ", asmline);
-
     }
 	| value '>' value{
         if($3->isNum){
-            pomp(1,$3->val); //a
+            pomp(1,$3->val);        // R1 = b
         }
         else{
             pomp_addr(0,*$3);
-            writeAsm("LOAD 1\n");
+            writeAsm("LOAD 1\n");   // R1 = b
         }
         if($1->isNum){
-            pomp(2,$1->val); //b
+            pomp(2,$1->val);        // R2 = a
             pompBigValue(0, address + 1);
-            writeAsm("STORE 2\n");
+            writeAsm("STORE 2\n");  // memR0 = R2
         }
         else{
-            pomp_addr(0,*$1);
+            pomp_addr(0,*$1);       // memR0 = addr.a
         }
 
         /* TERAZ MAMY W R1 = b MEM[R0] = a */
-
         // b < a lub b + 1 <= a
         writeAsm("INC 1\n");       // ++b
         writeAsm("SUB 1\n");      //R2 = R2 - memR0 = b + 1 - a = 0
@@ -852,7 +842,6 @@ cond:
 
         /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
-
         jumpLabel("JUMP ", asmline);
     }
 ;
@@ -933,8 +922,7 @@ identifier:
         $$ = new Variable;
         variable_copy(*$$, *varptr1);
     }
-	| VARIABLE '[' NUM ']'
-    {
+	| VARIABLE '[' NUM ']'{
         /* czy DECLARED  */
         auto it = variables.find(std :: string($1.str));
         if (it == variables.end())
@@ -960,7 +948,6 @@ identifier:
         variable_copy(*$$, var);
         $$->varOffset = NULL;
         $$->offset = atoll($3.str);
-
     }
 ;
 

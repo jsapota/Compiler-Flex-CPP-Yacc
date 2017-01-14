@@ -262,7 +262,6 @@ ifmid:
             poprzednia labelka chce skoczyc do else
             + wystawiamy nowa labelke do endif ( czyli omijamy elsa)
         */
-
         labelToLine(asmline + 1);
         jumpLabel("JUMP ",asmline);
     }
@@ -500,7 +499,7 @@ expr:
         // Czysty assembler
         if($1->isNum){
             pomp(1,$1->val); //a
-            pomp(4,$3->val); //b
+            pomp(4,$3->val); //a
         }
         else{
             pomp_addr(0,*$1);
@@ -516,40 +515,69 @@ expr:
             writeAsm("LOAD 2\n");
             writeAsm("LOAD 3\n");
         }
-
         pompBigValue(0,address);
         address = address + 1;
-////////// czy jest sens ///////////////////////////////////////////////////////
+        writeAsm("STORE 2\n");      // b -> memR0
+        writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
+        writeAsm("STORE 4\n");      // a -> memR0
+        writeAsm("SUB 2\n");           // R2 = b - memR0 = b - a
+        // a - b = 0 ==> b >= a
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek
+        // skocz false
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");       // a > b wiec false
+        // b - a = 0 ==> a >= b
+        writeAsm("JZERO 2 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R2 == 0 to mamy spelniony warunek
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");    // Jezeli R2 == 0 to mamy spelniony warunek
+        jumpLabel("JUMP ", asmline);  // false
+
+
+
+        // tutaj juz jest true to mamy skoczyc
+        pompBigValue(0,address);
+        address = address + 1;
+        if($1->isNum){
+            pomp(1,$1->val); //a
+            pomp(4,$3->val); //a
+        }
+        else{
+            pomp_addr(0,*$1);
+            writeAsm("LOAD 1\n");
+            writeAsm("LOAD 4\n");
+        }
+        if($3->isNum){
+            pomp(2,$3->val); //b
+            pomp(3,$3->val); //b
+        }
+        else{
+            pomp_addr(0,*$3);
+            writeAsm("LOAD 2\n");
+            writeAsm("LOAD 3\n");
+        }
+        pompBigValue(0,address);
+        address = address + 1;
         writeAsm("INC 4\n");    // ++a
         writeAsm("STORE 2\n");
         writeAsm("SUB 4\n");    //R1 = R1 - memR0 = a + 1 - b = 0
-        /*  Jezeli nie ma sensu dzielic to skocz do etykiety etykieta nizej*/
         jumpLabel("JZERO 4 ", asmline);
         writeAsm("ZERO 4\n");   // line 1
-////////////////////////////////////////////////////////////////////////////////
         pompBigValue(0,address);
         address = address + 1;
         writeAsm("ZERO 4\n");
         writeAsm("INC 4\n");
-        //////////  while a > b
         writeAsm("ZERO 3\n");   // line 1   BKup a
         writeAsm("STORE 1\n");  // line 2   BKup a
         writeAsm("ADD 3\n");    // line 3   BKup a
         writeAsm("STORE 2\n");  // line 4
         writeAsm("SUB 1\n");    // line 5
-        // jezeli a < b to skocz
         jumpline = asmline + 5;
         result = "JZERO 1 " + std::to_string(jumpline);
         writeAsm(result+"\n");  // line 6
-        // jezeli a > b to cofnij SUB 1 aby zachowac R1 = a
         writeAsm("ADD 1\n");    // line 7
-//////////  akcje z while
         writeAsm("SHL 2\n");    // line 8              // R2 = b * 2
         writeAsm("SHL 4\n");    // line 9              // R4 = nasz przyszly wynik
         jumpline = asmline - 9;
         result = "JUMP " + std::to_string(jumpline);    // dopoki mozna to
         writeAsm(result+"\n");  // line 10
-//////////  koniec while bo a <= b
         writeAsm("ZERO 1\n");   // line 11  BKup a
         writeAsm("STORE 3\n");  // line 12  BKup a
         writeAsm("ADD 1\n");    // line 13  BKup a
@@ -557,7 +585,6 @@ expr:
         writeAsm("SHR 4\n");    // line 15  cofnij SHL na wyniku
         writeAsm("STORE 2\n");  // line 16  // memR0 = b
         writeAsm("SUB 1\n");    // line 17  // R1 = R1 - memR0
-        // wczytujemy spowrotem do R2 = b
         if($3->isNum){
             pomp(2,$3->val); //b
         }
@@ -565,8 +592,6 @@ expr:
             pomp_addr(0,*$3);
             writeAsm("LOAD 2\n");
         }
-////////// koniec pierwszej operacji
-////////// drugi while
         writeAsm("STORE 1\n");  // line 1 // memR0 = a
         writeAsm("ZERO 3\n");   // line 2 // BKup nowego a
         writeAsm("ADD 3\n");    // line 3 // R3 = a
@@ -579,7 +604,6 @@ expr:
         jumpline = asmline - 7;
         result = "JUMP " + std::to_string(jumpline); // a - b == 0 ?
         writeAsm(result+"\n");  // line 8
-////////// w opor nie optymalnie ale trudno
         writeAsm("INC 3\n");    // line 9      // R3 = a + 1
         writeAsm("SUB 3\n");    // line 10     // R3 = a + 1 - b
         jumpline = asmline + 2;
@@ -589,61 +613,89 @@ expr:
         writeAsm("ZERO 1\n");   // line 31
         writeAsm("STORE 4\n");  // line 32
         writeAsm("ADD 1\n");    // line 33
-        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
-/////////   koniec dzielenia... przeskocz porazke //////////////////////////////
-/////////   jezeli nie bylo sensu to zwroc zero ////////////////////////////////
+        writeAsm("JUMP " + std :: to_string(asmline + 5) + "\n");
         labelToLine(asmline);
         writeAsm("ZERO 1\n");
-////////////////////////////////////////////////////////////////////////////////
+        writeAsm("JUMP " + std :: to_string(asmline + 3) + "\n");
+        labelToLine(asmline);
+        writeAsm("ZERO 1\n");
+        writeAsm("INC 1\n");
     }
 	| value '%' value  {
-            if(!$1->isNum){
+        if(!$1->isNum){
             auto it = variables[$1->name];
+            if (!it.init){
+                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                exit(1);
+            }
+        }
+        if(!$3->isNum){
+            auto it = variables[$3->name];
             if (!it.init)
-                {
-                    std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
-                    exit(1);
-                }
+            {
+                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
+                exit(1);
             }
-            if(!$3->isNum){
-                auto it = variables[$3->name];
-                if (!it.init)
-                {
-                    std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
-                    exit(1);
-                }
-            }
-            // Czysty assembler
-            if($1->isNum)
-                pomp(1,$1->val); //a
-            else{
-                pomp_addr(0,*$1);
-                writeAsm("LOAD 1\n");
-            }
-            if($3->isNum){
-                pomp(2,$3->val); //b
-                pomp(3,$3->val); //b
-            }
-            else{
-                pomp_addr(0,*$3);
-                writeAsm("LOAD 2\n");
-                writeAsm("LOAD 3\n");
-            }
+        }
+        std :: string result;
+        int jumpline;
+        writeAsm("ZERO 4\n");
+        // Czysty assembler
+        if($1->isNum){
+            pomp(1,$1->val); //a
+            pomp(4,$3->val); //a
+        }
+        else{
+            pomp_addr(0,*$1);
+            writeAsm("LOAD 1\n");
+            writeAsm("LOAD 4\n");
+        }
+        if($3->isNum){
+            pomp(2,$3->val); //b
+            pomp(3,$3->val); //b
+        }
+        else{
+            pomp_addr(0,*$3);
+            writeAsm("LOAD 2\n");
+            writeAsm("LOAD 3\n");
+        }
+        pompBigValue(0,address);
+        address = address + 1;
+        writeAsm("STORE 3\n");
+        writeAsm("SUB 4\n"); // b >= a?
+        writeAsm("DEC 3\n"); // b == 1
+        writeAsm("JZERO 4 " + std :: to_string(asmline + 3) + "\n");
+        writeAsm("JZERO 3 " + std :: to_string(asmline + 2) + "\n");
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
+        jumpLabel("JUMP ", asmline);  // zwroc 0 bo b > a, b == 1
+        // koniec testow
+        pompBigValue(0,address);
+        address = address + 1;
+        // MOD ?? ;/
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 20) + "\n");
+        writeAsm("STORE 1\n");  // bk a
+        writeAsm("ZERO 3\n");   // bk a
+        writeAsm("ADD 3\n");    // bk a
+        writeAsm("STORE 2\n");  // wez b
+        writeAsm("SUB 1\n");    // a -= b
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");
+        writeAsm("JUMP " + std :: to_string(asmline - 6) + "\n");
+        writeAsm("STORE 3\n");  // bk a
+        writeAsm("ZERO 4\n");   // bk a
+        writeAsm("ADD 4\n");    // bk a
+        writeAsm("STORE 2\n");  // wez b
+        writeAsm("INC 4\n");    // a + 1
+        writeAsm("SUB 4\n");    // a + 1 - b == 0?
+        writeAsm("JZERO 4 " + std :: to_string(asmline + 2) + "\n");
+        writeAsm("JUMP " + std :: to_string(asmline + 6) + "\n");
+        writeAsm("STORE 3\n");  // bk a
+        writeAsm("ZERO 1\n");   // bk a
+        writeAsm("ADD 1\n");    // bk a
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
 
-            //  Zaladowane wiec mod
-
-
-
-
-
-
-
-
-
-
-
-
-
+        // reakcje na b = 0 i b = 1
+        labelToLine(asmline);
+        writeAsm("ZERO 1\n");
 
 
     }
@@ -676,7 +728,7 @@ cond:
         writeAsm("STORE 2\n");      // b -> memR0
         writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
         writeAsm("STORE 3\n");      // a -> memR0
-        writeAsm("SUB 1");           // R2 = b - memR0 = b - a
+        writeAsm("SUB 2");           // R2 = b - memR0 = b - a
         // a - b = 0 ?
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek
         // skocz false
@@ -711,7 +763,7 @@ cond:
         writeAsm("STORE 2\n");      // b -> memR0
         writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
         writeAsm("STORE 3\n");      // a -> memR0
-        writeAsm("SUB 1");           // R2 = b - memR0 = b - a
+        writeAsm("SUB 2");           // R2 = b - memR0 = b - a
         // a - b != 0 ?
         writeAsm("JZERO 1 " + std :: to_string(asmline + 3) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek
         // b - a != 0 ?
@@ -1020,8 +1072,8 @@ inline void pompBigValue(int numRegister,cln :: cl_I value){
 }
 
 inline void writeAsm(std :: string const &str){
-    //std :: string strNew = "Line" + std :: to_string(asmline) + "-" + str;
-    //code.push_back(strNew);
+    /*std :: string strNew = "Line" + std :: to_string(asmline) + "-" + str;*/
+    /*code.push_back(strNew);*/
     code.push_back(str);
     ++asmline;
 }

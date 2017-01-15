@@ -8,9 +8,12 @@ int yylex(void);
 void yyerror(const char *msg);
 //zmienilem zakres addresu
 cln :: cl_I address = 0;
-static int label = 0;
 extern FILE *yyin;
 uint64_t asmline = 0;
+
+/*  poczatkowe linie petli while i for */
+std :: stack <int64_t> looplines;
+
 std :: vector <std :: string> code;
 /*
     stack with lines from we want to jump HERE
@@ -153,6 +156,7 @@ vdeclar:
         var.iter = false;
         var.val = 0;
         variables.insert ( std::pair<std :: string,Variable>(var.name,var) );
+
     }
 	| vdeclar VARIABLE '[' NUM ']'{
         /*
@@ -201,9 +205,9 @@ command:
 	identifier ASSIGN expr ';' {
         /* Konwencja mowi ze wynik expr bedzie w R1  */
         /* ustaw R0 na addr identifiera  WIEMY ZE TO VAR */
-        auto it = variables[$2->str];
+        auto it = variables[$1->name];
         if (it.iter){
-            std :: cerr << "VARIABLE IS ITERATOR\t" << $1->str << std :: endl;
+            std :: cerr << "VARIABLE IS ITERATOR\t" << $1->name << std :: endl;
             exit(1);
         }
         pomp_addr(0, *$1); // R0 = addres zmiennej
@@ -222,15 +226,16 @@ command:
             ustawiamy R0 na jego address
             zapisujemy wartosc
          */
-         auto it = variables[$2->str];
+         auto it = variables[$2->name];
          if (it.iter){
-             std :: cerr << "VARIABLE IS ITERATOR\t" << $1->str << std :: endl;
+             std :: cerr << "VARIABLE IS ITERATOR\t" << $2->name << std :: endl;
              exit(1);
          }
          writeAsm("GET 1\n");
          pomp_addr(0, *$2);
          writeAsm("STORE 1\n");
          variables[$2->name].init = true;
+
     }
 	| WRITE value ';'{
         /*
@@ -244,7 +249,11 @@ command:
                 pompuj do R1
                 wypisz R1 na stdout
         */
-
+        auto it = variables[$2->name];
+        if (!it.init){
+            std :: cerr << "VARIABLE NOT INITIALIZED\t" << $2->name << std :: endl;
+            exit(1);
+        }
         if(! $2->isNum)
         {
             pomp_addr(0, *$2);
@@ -278,40 +287,63 @@ ifend:
         /* label z else zamieniamy na linie */
             labelToLine(asmline);
     }
-whilebeg:
-    WHILE cond DO{
-        /* tutaj znowu nic nie robimy bo interesuje nas tylko cond */
+prewhile:
+    WHILE
+    {
+        /*  wrzucamy na stos asmline by moc powrocic */
+        looplines.push(asmline);
     }
+    ;
+whilebeg:
+    prewhile cond DO{
+        /* tu nic juz nie robimy bo mamy linie powrotu i conda zrobionego */
+    }
+    ;
 whileend:
     commands ENDWHILE{
         /* label z conda zamieniamy na linie */
+
         labelToLine(asmline);
     }
+    ;
 forbegTO:
-    FOR VARIABLE FROM value TO value DO{
+    FOR VARIABLE FROM value TO value DO
+    {
         /* deklaracja VAR juz jest wiec zapalamy flage iteratora */
-        auto it = variables[$2->str];
+        auto it = variables[$4->name];
         if (!it.init){
-            std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->str << std :: endl;
+            std :: cerr << "VARIABLE NOT INITIALIZED\t" << $4->name << std :: endl;
+            exit(1);
+        }
+        it = variables[$6->name];
+        if (!it.init){
+            std :: cerr << "VARIABLE NOT INITIALIZED\t" << $6->name << std :: endl;
             exit(1);
         }
         variables[$2.str].iter = true;
     }
+    ;
 forendTO:
     commands ENDFOR{
-    }
+    };
 forbegDOWNTO:
     FOR VARIABLE FROM value DOWNTO value DO{
         /* deklaracja VAR juz jest wiec zapalamy flage iteratora */
-        auto it = variables[$2->str];
+        auto it = variables[$4->name];
         if (!it.init){
-            std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->str << std :: endl;
+            std :: cerr << "VARIABLE NOT INITIALIZED\t" << $4->name << std :: endl;
             exit(1);
+        }
+        it = variables[$6->name];
+        if (!it.init){
+            std :: cerr << "VARIABLE NOT INITIALIZED\t" << $6->name << std :: endl;
+            exit(1);
+        }
         variables[$2.str].iter = true;
-    }
+    };
 forendDOWNTO:
     commands ENDFOR{
-    }
+    };
 
 expr:
 	value{
@@ -652,7 +684,6 @@ expr:
             }
         }
         std :: string result;
-        int jumpline;
         writeAsm("ZERO 4\n");
         // Czysty assembler
         if($1->isNum){
@@ -782,20 +813,20 @@ cond:
         }// W R0 lub w R1 bedzie wynik 1 - true, 0 - false
         // Napomuj R2 = a, R3 = a, R4 = b
         if($1->isNum){
-            pomp(2,$1->val); //a
+            pomp(1,$1->val); //a
             pomp(3,$1->val); //a
         }
         else{
             pomp_addr(0,*$1);
-            writeAsm("LOAD 2\n");
+            writeAsm("LOAD 1\n");
             writeAsm("LOAD 3\n");
         }
         if($3->isNum){
-            pomp(4,$3->val); //b
+            pomp(2,$3->val); //b
         }
         else{
             pomp_addr(0,*$3);
-            writeAsm("LOAD 4\n");
+            writeAsm("LOAD 2\n"); //b
         }
         // R0 = wolny address
         pompBigValue(0,address);
@@ -804,11 +835,9 @@ cond:
         writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
         writeAsm("STORE 3\n");      // a -> memR0
         writeAsm("SUB 2");           // R2 = b - memR0 = b - a
-        // a - b != 0 ?
-        writeAsm("JZERO 1 " + std :: to_string(asmline + 3) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek
-        // b - a != 0 ?
-        writeAsm("JZERO 2 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R2 == 0 to mamy spelniony warunek
-        // jezeli oba JZER0 nic nie zrobily to NE wiec przeskocz do jumpLabel
+        writeAsm("STORE 2\n");
+        writeAsm("ADD 1\n");
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek
         writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");       // a > b wiec false
         jumpLabel("JUMP ", asmline);  // false
         // tutaj juz jest true to mamy skoczyc
@@ -928,9 +957,7 @@ cond:
         else{
             pomp_addr(0,*$3);
         }
-
         /* TERAZ MAMY W R1 = a MEM[R0] = b */
-
         // a < b lub a <= b
         writeAsm("SUB 1\n");      //R2 = R2 - memR0 = a - b = 0
 
@@ -990,7 +1017,6 @@ value:
         $$->val = atoll($1.str);
     }
 	| identifier{
-        $$ = $1;
     }
 ;
 
@@ -1009,6 +1035,8 @@ identifier:
             std :: cerr << "VARIABLE IS ARRAY" << $1.str << std :: endl;
             exit(1);
         }
+
+
         /* czy Propagacja  */
         $$ = new Variable;
         variable_copy(*$$, var);

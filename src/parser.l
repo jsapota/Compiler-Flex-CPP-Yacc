@@ -48,8 +48,8 @@ WHITE_C 				[ \t]
 \<\>					{  return yy_lex((int)NE); }
 \<						{   return yy_lex((int)'<'); }
 \>						{   return yy_lex((int)'>'); }
-\<\=					{   return yy_lex((int)GE); }
-\>\=					{  return yy_lex((int)LE); }
+\>\=					{   return yy_lex((int)GE); }
+\<\=					{  return yy_lex((int)LE); }
 
 
 VAR						{ return yy_lex(VAR); }

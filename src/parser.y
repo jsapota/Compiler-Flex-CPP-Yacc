@@ -3,17 +3,28 @@
 #include <fstream>
 #include <vector>
 #include <stack>
-#include <cln/integer.h>
+#include <map>
+#include <variable.h>
+#include <asm.h>
+
 int yylex(void);
 void yyerror(const char *msg);
-//zmienilem zakres addresu
-cln :: cl_I address = 0;
+
+/* first free address */
+static cln :: cl_I address = 0;
 extern FILE *yyin;
+
+/* number of next line in asm code */
 uint64_t asmline = 0;
 
 /*  poczatkowe linie petli while i for */
-std :: stack <int64_t> looplines;
+static std :: stack <int64_t> looplines;
 
+static std :: stack <Variable*> iterators;
+
+static std :: map<std :: string, Variable> variables;
+
+/* asm code */
 std :: vector <std :: string> code;
 /*
     stack with lines from we want to jump HERE
@@ -23,35 +34,25 @@ std :: vector <std :: string> code;
     1. Create string : jzero 2(space)
     2. Call jumpLabel(created string, @line)
     3. When you go to the wanted line, call labelToLine()
-    IMPORTANT:
 
-    OLD:
-    We need alligned lables, so if we use in ne, eq 2x jump to FALSE label,
-    we need create FAKE_LABEL in others conditions
+    IMPORTANT:
 
     CURRENT:
     1 cond <--> 1 label
 
 */
-std :: stack <int64_t> labels;
-/* we need fake label to fullfits condition rules */
-#define FAKE_LABEL  -1ll
-inline void pomp(int numRegister, uint64_t val);
-/* 0 iff ikty bit w n = 0, else 1 */
-#define GET_BIT(n , k)      (((n) & (1ull << k)) >> k )
-#define GET_BIGBIT(n, k)    ((cln :: oddp(n >> k)))
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
-inline void writeAsm(std :: string const &str);
+static std :: stack <int64_t> labels;
+
 inline void jumpLabel(std :: string const &str, int64_t line); // jump to false
 inline void labelToLine(uint64_t line);
+
 %}
 
 /* we need own struct so define it before use in union */
 %code requires
 {
-    #include <string.h>
-    #include <map>
-    #include <cln/integer.h>
+    #include<common.h>
+    #include<variable.h>
 
     typedef struct yytoken
     {
@@ -59,35 +60,6 @@ inline void labelToLine(uint64_t line);
         int line;
     }yytoken;
 
-    typedef struct Variable
-    {
-
-        std :: string name;
-
-        int reg;
-        //zmienilem zakres addresu
-        cln :: cl_I addr;
-        //zmienilem zakres tablicy
-        cln :: cl_I len;
-        //zakres wartosci
-        uint64_t val;
-
-        bool isNum;
-        bool upToDate;
-        bool array;
-        bool init;
-        bool iter;
-
-
-        uint64_t offset; /* t[1000] := a + b   offset = 1000 */
-        struct Variable *varOffset; /*  t[b] := a + c  varOffset = ptr --> b*/
-
-    }Variable;
-    void inline pomp_addr(int numRegister, Variable const &var);
-    void inline pompBigValue(int numRegister, cln :: cl_I value);
-    void inline variable_copy(Variable &dst, Variable const &src);
-    void variable_load(Variable const &var, int numRegister);
-    static std :: map<std :: string, Variable> variables;
 }
 
 /* override yylval */
@@ -249,10 +221,13 @@ command:
                 pompuj do R1
                 wypisz R1 na stdout
         */
-        auto it = variables[$2->name];
-        if (!it.init){
-            std :: cerr << "VARIABLE NOT INITIALIZED\t" << $2->name << std :: endl;
-            exit(1);
+        if(! $2->isNum)
+        {
+            auto it = variables[$2->name];
+            if (!it.init){
+                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $2->name << std :: endl;
+                exit(1);
+            }
         }
         if(! $2->isNum)
         {
@@ -302,6 +277,11 @@ whilebeg:
 whileend:
     commands ENDWHILE{
         /* label z conda zamieniamy na linie */
+        int64_t line;
+        line = looplines.top();
+        looplines.pop();
+
+        writeAsm("JUMP " + std :: to_string(line) + "\n");
 
         labelToLine(asmline);
     }
@@ -310,40 +290,277 @@ forbegTO:
     FOR VARIABLE FROM value TO value DO
     {
         /* deklaracja VAR juz jest wiec zapalamy flage iteratora */
-        auto it = variables[$4->name];
-        if (!it.init){
-            std :: cerr << "VARIABLE NOT INITIALIZED\t" << $4->name << std :: endl;
+        if(! $4->isNum)
+        {
+            auto it = variables[$4->name];
+            if (!it.init){
+                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $4->name << std :: endl;
+                exit(1);
+            }
+        }
+        if(! $6->isNum)
+        {
+            auto it = variables[$6->name];
+            if (! it.isNum && !it.init){
+                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $6->name << std :: endl;
+                exit(1);
+            }
+        }
+
+        /* wyluskujemy iterator */
+        auto it2 = variables.find(std :: string($2.str));
+        if (it2 != variables.end())
+        {
+            std :: cerr << "REDECLARED ITERATOR\t" << $2.str << std :: endl;
             exit(1);
         }
-        it = variables[$6->name];
-        if (!it.init){
-            std :: cerr << "VARIABLE NOT INITIALIZED\t" << $6->name << std :: endl;
-            exit(1);
+
+        /* deklarujemy iterator */
+        Variable var;
+        var.name = std :: string($2.str);
+        var.reg = -1;
+        var.addr = address;
+        address = address + 1;
+        var.len = 0;
+        var.isNum = false;
+        var.array = false;
+        var.init = true; /* zaraz ustawimy ten iterator */
+        var.upToDate = true;
+        var.iter = true; /* tak to jest iterator */
+        var.val = 0;
+        variables.insert ( std::pair<std :: string,Variable>(var.name,var) );
+
+        /* zapamietaj iterator */
+        Variable *iterator = new Variable;
+        variable_copy(*iterator, var);
+
+        iterators.push(iterator);
+
+        /* iterator := value1 */
+        if(! $4->isNum)
+        {
+            pomp_addr(0, *$4);
+            writeAsm("LOAD 1\n");
         }
-        variables[$2.str].iter = true;
+        else
+            pomp(1, $4->val);
+
+        pomp_addr(0, var);
+        writeAsm("STORE 1\n");
+
+        /* zapamietujemy linie */
+        int64_t line = asmline;
+        looplines.push(line);
+
+        /* COND: it <= value2 */
+
+        /* wczytaj it */
+        pomp_addr(0, var);
+        writeAsm("LOAD 1\n");
+
+        if($6->isNum){
+            pomp(2,$6->val); //b
+            pompBigValue(0, address + 1);
+            writeAsm("STORE 2\n");
+        }
+        else{
+            pomp_addr(0,*$6);
+        }
+        /* TERAZ MAMY W R1 = a MEM[R0] = b */
+        // a < b lub a <= b
+        writeAsm("SUB 1\n");      //R2 = R2 - memR0 = a - b = 0
+
+        /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
+
+        jumpLabel("JUMP ", asmline);
+
     }
     ;
 forendTO:
     commands ENDFOR{
+
+        /* czytamy zapamietany iterator */
+        Variable *var;
+        var = iterators.top();
+        iterators.pop();
+
+        /* INC iterator */
+        pomp_addr(0, *var);
+        writeAsm("LOAD 1\n");
+        writeAsm("INC 1\n");
+        writeAsm("STORE 1\n");
+
+        int64_t line;
+        line = looplines.top();
+        looplines.pop();
+
+        writeAsm("JUMP " + std :: to_string(line) + "\n");
+
+        labelToLine(asmline);
+
+        /* usun iteratora z mapy */
+        auto it = variables.find(var->name);
+        variables.erase(it);
+
     };
 forbegDOWNTO:
     FOR VARIABLE FROM value DOWNTO value DO{
+
         /* deklaracja VAR juz jest wiec zapalamy flage iteratora */
-        auto it = variables[$4->name];
-        if (!it.init){
-            std :: cerr << "VARIABLE NOT INITIALIZED\t" << $4->name << std :: endl;
+        if(! $4->isNum)
+        {
+            auto it = variables[$4->name];
+            if (!it.init){
+                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $4->name << std :: endl;
+                exit(1);
+            }
+        }
+        if(! $6->isNum)
+        {
+            auto it = variables[$6->name];
+            if (! it.isNum && !it.init){
+                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $6->name << std :: endl;
+                exit(1);
+            }
+        }
+
+        /* wyluskujemy iterator */
+        auto it2 = variables.find(std :: string($2.str));
+        if (it2 != variables.end())
+        {
+            std :: cerr << "REDECLARED ITERATOR\t" << $2.str << std :: endl;
             exit(1);
         }
-        it = variables[$6->name];
-        if (!it.init){
-            std :: cerr << "VARIABLE NOT INITIALIZED\t" << $6->name << std :: endl;
-            exit(1);
+
+        /* deklarujemy iterator */
+        Variable var;
+        var.name = std :: string($2.str);
+        var.reg = -1;
+        var.addr = address;
+        address = address + 1;
+        var.len = 0;
+        var.isNum = false;
+        var.array = false;
+        var.init = true; /* zaraz ustawimy ten iterator */
+        var.upToDate = true;
+        var.iter = true; /* tak to jest iterator */
+        var.val = 0;
+        variables.insert ( std::pair<std :: string,Variable>(var.name,var) );
+
+        /* zapamietaj iterator */
+        Variable *iterator = new Variable;
+        variable_copy(*iterator, var);
+
+        iterators.push(iterator);
+
+        /* iterator := value1 */
+        if(! $4->isNum)
+        {
+            pomp_addr(0, *$4);
+            writeAsm("LOAD 1\n");
         }
-        variables[$2.str].iter = true;
+        else
+            pomp(1, $4->val);
+
+        pomp_addr(0, var);
+        writeAsm("STORE 1\n");
+
+        /* robimy iterator pomocniczy */
+        Variable var2;
+        var2.name = std :: string($2.str) + "2";
+        var2.reg = -1;
+        var2.addr = address;
+        address = address + 1;
+        var2.len = 0;
+        var2.isNum = false;
+        var2.array = false;
+        var2.init = true; /* zaraz ustawimy ten iterator */
+        var2.upToDate = true;
+        var2.iter = true; /* tak to jest iterator */
+        var2.val = 0;
+        variables.insert ( std::pair<std :: string,Variable>(var2.name,var2) );
+
+        /* 2 iterator to licznik wykonan ma sie wykonac begin + 1 - end razy */
+
+        /* czytaj begin i incuj */
+        if(! $4->isNum)
+        {
+            pomp_addr(0, *$4);
+            writeAsm("LOAD 1\n");
+            writeAsm("INC 1\n");
+        }
+        else
+        {
+            pomp(1, $4->val);
+            writeAsm("INC 1\n");
+        }
+
+
+        /* ustaw R0 na end */
+        if(! $6->isNum)
+            pomp_addr(0, *$6);
+        else
+        {
+            pomp(2, $6->val);
+            pompBigValue(0, address);
+            writeAsm("STORE 2\n");
+        }
+
+        /* mozemy odejmowac */
+        writeAsm("SUB 1\n");
+
+        /* teraz w 1 mamy ilosc wykonan petli zapiszmy do iteratora2 */
+        pomp_addr(0, var2);
+
+        writeAsm("STORE 1\n");
+
+        /* KONIEC PRZYGOTOWANIA FORA */
+        /* zapamietujemy linie */
+        int64_t line = asmline;
+        looplines.push(line);
+
+        /* wczytaj drugi iterator */
+        pomp_addr(0, var2);
+        writeAsm("LOAD 1\n");
+        jumpLabel("JZERO 1 ", asmline); /* jesli it == 0 znaczy sie ze wszystko wykonalismy */
     };
+
 forendDOWNTO:
     commands ENDFOR{
-    };
+        /* czytamy zapamietany iterator */
+        Variable *var;
+        var = iterators.top();
+        iterators.pop();
+
+        /* DEC iterator */
+        pomp_addr(0, *var);
+        writeAsm("LOAD 1\n");
+        writeAsm("DEC 1\n");
+        writeAsm("STORE 1\n");
+
+        /* DEC drugiego iteratora */
+        auto it = variables[var->name + "2"];
+        pomp_addr(0, it);
+        writeAsm("LOAD 1\n");
+        writeAsm("DEC 1\n");
+        writeAsm("STORE 1\n");
+
+        int64_t line;
+        line = looplines.top();
+        looplines.pop();
+
+        writeAsm("JUMP " + std :: to_string(line) + "\n");
+
+        labelToLine(asmline);
+
+        /* usun iteratora z mapy */
+        auto it2 = variables.find(var->name);
+        variables.erase(it2);
+
+        auto it3 = variables.find(it.name);
+        variables.erase(it3);
+}
 
 expr:
 	value{
@@ -1121,94 +1338,10 @@ void yyerror(const char *msg){
     exit(1);
 }
 
-inline void variable_copy(Variable &dst, Variable const &src){
-        dst.name = src.name;
-        dst.reg = src.reg;
-        dst.addr = src.addr;
-        dst.len = src.len;
-        dst.isNum = src.isNum;
-        dst.upToDate = src.upToDate;
-        dst.array = src.array;
-        dst.init = src.init;
-        dst.iter = src.iter;
-        dst.val = src.val;
-        dst.offset = src.offset;
-        dst.varOffset = src.varOffset;
-}
-
-inline void pomp(int numRegister, uint64_t val){
-    int i;
-    writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
-    for(i = (sizeof(uint64_t) * 8) - 1; i > 0; --i)
-        if(GET_BIT(val , i) )
-            break;
-
-    for(; i > 0; --i)
-        if( GET_BIT(val , i) )
-        {
-            writeAsm("INC " + std :: to_string(numRegister) + "\n");
-            writeAsm("SHL " + std :: to_string(numRegister) + "\n");
-        }
-        else
-        {
-            writeAsm("SHL " + std :: to_string(numRegister) + "\n");
-        }
-
-    if(GET_BIT(val, i))
-        writeAsm("INC " + std :: to_string(numRegister) + "\n");
-}
-
-inline void pomp_addr(int numRegister,Variable const &var){
-
-    writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
-    if(!var.array)
-        pompBigValue(numRegister, var.addr);
-    else
-        if ( var.varOffset == NULL )
-            pompBigValue(numRegister, var.addr + var.offset);
-        else{
-            pompBigValue(4,var.addr);
-            pompBigValue(0,var.varOffset->addr);
-            writeAsm("ADD 4 \n");
-            writeAsm("COPY 4\n");
-        }
-}
-
-inline void pompBigValue(int numRegister,cln :: cl_I value){
-    cln :: cl_I i = value;
-    writeAsm("ZERO " + std :: to_string(numRegister) + "\n");
-    for(i = cln :: integer_length(i); i > 0; --i){
-        if(GET_BIGBIT(value , i))
-            break;
-    }
-
-    for(; i > 0; --i)
-        if(GET_BIGBIT(value , i))
-        {
-            writeAsm("INC " + std :: to_string(numRegister) + "\n");
-            writeAsm("SHL " + std :: to_string(numRegister) + "\n");
-        }
-        else
-        {
-            writeAsm("SHL " + std :: to_string(numRegister) + "\n");
-        }
-
-    if(GET_BIGBIT(value, i))
-        writeAsm("INC " + std :: to_string(numRegister) + "\n");
-}
-
-inline void writeAsm(std :: string const &str){
-    /*std :: string strNew = "Line" + std :: to_string(asmline) + "-" + str;*/
-    /*code.push_back(strNew);*/
-    code.push_back(str);
-    ++asmline;
-}
-
 inline void jumpLabel(std :: string const &str, int64_t line){
     labels.push(line);
 
-    if(line != FAKE_LABEL)
-        writeAsm(str);
+    writeAsm(str);
 }
 
 inline void labelToLine(uint64_t line){
@@ -1216,8 +1349,7 @@ inline void labelToLine(uint64_t line){
     jline = labels.top();
     labels.pop();
 
-    if(jline != FAKE_LABEL)
-        code[jline] += std :: to_string(line) + "\n";
+    code[jline] += std :: to_string(line) + "\n";
 }
 
 int compile(const char *infile, const char *outfile){

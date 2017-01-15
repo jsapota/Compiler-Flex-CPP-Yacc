@@ -13,5 +13,6 @@ file
 file*
 tests/*
 external/*
-test
-asm
+test*
+asm*
+!include/asm.h

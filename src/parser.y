@@ -574,7 +574,7 @@ expr:
                     {
                         std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                         exit(1);
-                    }                
+                    }
                 pomp_addr(0, *$1);
                 writeAsm("LOAD 1\n");
             }
@@ -768,8 +768,6 @@ expr:
                 exit(1);
             }
         }
-        std :: string result;
-        int jumpline;
         writeAsm("ZERO 4\n");
         // Czysty assembler
         if($1->isNum){
@@ -844,15 +842,11 @@ expr:
         writeAsm("ADD 3\n");    // line 3   BKup a
         writeAsm("STORE 2\n");  // line 4
         writeAsm("SUB 1\n");    // line 5
-        jumpline = asmline + 5;
-        result = "JZERO 1 " + std::to_string(jumpline);
-        writeAsm(result+"\n");  // line 6
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 5) + "\n");    // Jezeli R2 == 0 to mamy spelniony warunek
         writeAsm("ADD 1\n");    // line 7
         writeAsm("SHL 2\n");    // line 8              // R2 = b * 2
         writeAsm("SHL 4\n");    // line 9              // R4 = nasz przyszly wynik
-        jumpline = asmline - 9;
-        result = "JUMP " + std::to_string(jumpline);    // dopoki mozna to
-        writeAsm(result+"\n");  // line 10
+        writeAsm("JUMP " + std :: to_string(asmline - 9) + "\n");    // Jezeli R2 == 0 to mamy spelniony warunek
         writeAsm("ZERO 1\n");   // line 11  BKup a
         writeAsm("STORE 3\n");  // line 12  BKup a
         writeAsm("ADD 1\n");    // line 13  BKup a
@@ -872,18 +866,12 @@ expr:
         writeAsm("ADD 3\n");    // line 3 // R3 = a
         writeAsm("STORE 2\n");  // line 4 // memR0 = b
         writeAsm("SUB 1\n");    // line 5 // R1 - b
-        jumpline = asmline + 3;
-        result = "JZERO 1 " + std::to_string(jumpline); // nie wiemy czy a == b
-        writeAsm(result+"\n");  // line 6
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 3) + "\n");    // Jezeli R2 == 0 to mamy spelniony warunek
         writeAsm("INC 4\n");    // line 7 // R4 ++
-        jumpline = asmline - 7;
-        result = "JUMP " + std::to_string(jumpline); // a - b == 0 ?
-        writeAsm(result+"\n");  // line 8
+        writeAsm("JUMP " + std :: to_string(asmline - 7) + "\n");    // Jezeli R2 == 0 to mamy spelniony warunek
         writeAsm("INC 3\n");    // line 9      // R3 = a + 1
         writeAsm("SUB 3\n");    // line 10     // R3 = a + 1 - b
-        jumpline = asmline + 2;
-        result = "JZERO 3 " + std::to_string(jumpline); // nie wiemy czy a == b
-        writeAsm(result+"\n");  // line 29
+        writeAsm("JZERO 3 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R2 == 0 to mamy spelniony warunek
         writeAsm("INC 4\n");    // line 30
         writeAsm("ZERO 1\n");   // line 31
         writeAsm("STORE 4\n");  // line 32
@@ -1259,13 +1247,10 @@ identifier:
             exit(1);
         }
         /* czy ARRAY  */
-        Variable var = variables[std  :: string($1.str)];
-        if( var.array){
+        if( it.array){
             std :: cerr << "ERROR: VARIABLE IS ARRAY" << $1.str << std :: endl;
             exit(1);
         }
-
-
         /* czy Propagacja  */
         $$ = new Variable;
         variable_copy(*$$, var);
@@ -1280,8 +1265,7 @@ identifier:
             exit(1);
         }
         /* czy ARRAY  */
-        Variable var = variables[std  :: string($1.str)];
-        if( !var.array){
+        if( !it.array){
             std :: cerr << "ERROR: VARIABLE ISNT ARRAY" << $1.str << std :: endl;
             exit(1);
         }
@@ -1295,16 +1279,13 @@ identifier:
         }
 
         /* czy NIE ARRAY  */
-        var = variables[std  :: string($3.str)];
-        if( var.array){
+        if( it.array){
             std :: cerr << "ERROR: VARIABLE CANT BE ARRAY" << $3.str << std :: endl;
             exit(1);
         }
 
-
         var = variables[std  :: string($1.str)];
         Variable var2 = variables[std  :: string($3.str)];
-
 
         /* czy Propagacja  */
         Variable *varptr1 = new Variable;
@@ -1323,15 +1304,13 @@ identifier:
             std :: cerr << "ERROR: VARIABLE NOT DECLARED\t" << $1.str << std :: endl;
             exit(1);
         }
-
         /* czy ARRAY  */
-        Variable var = variables[std  :: string($1.str)];
-        if( !var.array){
+        if( !it.array){
             std :: cerr << "ERROR: VARIABLE ISNT ARRAY\t" << $1.str << std :: endl;
             exit(1);
         }
             /* czy OUT OF RANGE  */
-        if( var.len <= atoll($3.str)){
+        if( it.len <= atoll($3.str)){
             std :: cerr << "ERROR: INDEX OUT OF RANGE\t" << $1.str << std :: endl;
             exit(1);
         }

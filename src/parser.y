@@ -1247,10 +1247,13 @@ identifier:
             exit(1);
         }
         /* czy ARRAY  */
-        if( it.array){
+        Variable var = variables[std  :: string($1.str)];
+        if( var.array){
             std :: cerr << "ERROR: VARIABLE IS ARRAY" << $1.str << std :: endl;
             exit(1);
         }
+
+
         /* czy Propagacja  */
         $$ = new Variable;
         variable_copy(*$$, var);
@@ -1265,7 +1268,8 @@ identifier:
             exit(1);
         }
         /* czy ARRAY  */
-        if( !it.array){
+        Variable var = variables[std  :: string($1.str)];
+        if( !var.array){
             std :: cerr << "ERROR: VARIABLE ISNT ARRAY" << $1.str << std :: endl;
             exit(1);
         }
@@ -1279,13 +1283,16 @@ identifier:
         }
 
         /* czy NIE ARRAY  */
-        if( it.array){
+        var = variables[std  :: string($3.str)];
+        if( var.array){
             std :: cerr << "ERROR: VARIABLE CANT BE ARRAY" << $3.str << std :: endl;
             exit(1);
         }
 
+
         var = variables[std  :: string($1.str)];
         Variable var2 = variables[std  :: string($3.str)];
+
 
         /* czy Propagacja  */
         Variable *varptr1 = new Variable;
@@ -1304,13 +1311,15 @@ identifier:
             std :: cerr << "ERROR: VARIABLE NOT DECLARED\t" << $1.str << std :: endl;
             exit(1);
         }
+
         /* czy ARRAY  */
-        if( !it.array){
+        Variable var = variables[std  :: string($1.str)];
+        if( !var.array){
             std :: cerr << "ERROR: VARIABLE ISNT ARRAY\t" << $1.str << std :: endl;
             exit(1);
         }
             /* czy OUT OF RANGE  */
-        if( it.len <= atoll($3.str)){
+        if( var.len <= atoll($3.str)){
             std :: cerr << "ERROR: INDEX OUT OF RANGE\t" << $1.str << std :: endl;
             exit(1);
         }

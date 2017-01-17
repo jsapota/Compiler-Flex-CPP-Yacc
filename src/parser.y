@@ -112,7 +112,7 @@ vdeclar:
         auto it = variables.find(std :: string($2.str));
         if (it != variables.end())
         {
-            std :: cerr << "REDECLARED\t" << $2.str << std :: endl;
+            std :: cerr << "ERROR: REDECLARED\t" << $2.str << std :: endl;
             exit(1);
         }
         Variable var;
@@ -144,7 +144,7 @@ vdeclar:
         auto it = variables.find(std :: string($2.str));
         if (it != variables.end())
         {
-            std :: cerr << "REDECLARED\t" << $2.str << std :: endl;
+            std :: cerr << "ERROR: REDECLARED\t" << $2.str << std :: endl;
             exit(1);
         }
         Variable var;
@@ -156,7 +156,7 @@ vdeclar:
         address += var.len;
         if(var.len == 0)
         {
-            std :: cerr << "SIZE OF ARRAY CANT BE 0\t" << $2.str << std :: endl;
+            std :: cerr << "ERROR: SIZE OF ARRAY CANT BE 0\t" << $2.str << std :: endl;
             exit(1);
         }
         var.array = true;
@@ -179,7 +179,7 @@ command:
         /* ustaw R0 na addr identifiera  WIEMY ZE TO VAR */
         auto it = variables[$1->name];
         if (it.iter){
-            std :: cerr << "VARIABLE IS ITERATOR\t" << $1->name << std :: endl;
+            std :: cerr << "ERROR: VARIABLE IS ITERATOR\t" << $1->name << std :: endl;
             exit(1);
         }
         pomp_addr(0, *$1); // R0 = addres zmiennej
@@ -200,7 +200,7 @@ command:
          */
          auto it = variables[$2->name];
          if (it.iter){
-             std :: cerr << "VARIABLE IS ITERATOR\t" << $2->name << std :: endl;
+             std :: cerr << "ERROR: VARIABLE IS ITERATOR\t" << $2->name << std :: endl;
              exit(1);
          }
          writeAsm("GET 1\n");
@@ -225,7 +225,7 @@ command:
         {
             auto it = variables[$2->name];
             if (!it.init){
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $2->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $2->name << std :: endl;
                 exit(1);
             }
         }
@@ -294,7 +294,7 @@ forbegTO:
         {
             auto it = variables[$4->name];
             if (!it.init){
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $4->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $4->name << std :: endl;
                 exit(1);
             }
         }
@@ -302,7 +302,7 @@ forbegTO:
         {
             auto it = variables[$6->name];
             if (! it.isNum && !it.init){
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $6->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $6->name << std :: endl;
                 exit(1);
             }
         }
@@ -311,7 +311,7 @@ forbegTO:
         auto it2 = variables.find(std :: string($2.str));
         if (it2 != variables.end())
         {
-            std :: cerr << "REDECLARED ITERATOR\t" << $2.str << std :: endl;
+            std :: cerr << "ERROR: REDECLARED ITERATOR\t" << $2.str << std :: endl;
             exit(1);
         }
 
@@ -412,7 +412,7 @@ forbegDOWNTO:
         {
             auto it = variables[$4->name];
             if (!it.init){
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $4->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $4->name << std :: endl;
                 exit(1);
             }
         }
@@ -420,7 +420,7 @@ forbegDOWNTO:
         {
             auto it = variables[$6->name];
             if (! it.isNum && !it.init){
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $6->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $6->name << std :: endl;
                 exit(1);
             }
         }
@@ -429,7 +429,7 @@ forbegDOWNTO:
         auto it2 = variables.find(std :: string($2.str));
         if (it2 != variables.end())
         {
-            std :: cerr << "REDECLARED ITERATOR\t" << $2.str << std :: endl;
+            std :: cerr << "ERROR: REDECLARED ITERATOR\t" << $2.str << std :: endl;
             exit(1);
         }
 
@@ -578,7 +578,7 @@ expr:
             auto it = variables[$1->name];
             if (!it.init)
                 {
-                    std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                    std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                     exit(1);
                 }
             }
@@ -586,7 +586,7 @@ expr:
                 auto it = variables[$3->name];
                 if (!it.init)
                 {
-                    std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
+                    std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                     exit(1);
                 }
             }
@@ -627,7 +627,7 @@ expr:
             auto it = variables[$1->name];
             if (!it.init)
                 {
-                    std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                    std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                     exit(1);
                 }
             }
@@ -635,7 +635,7 @@ expr:
                 auto it = variables[$3->name];
                 if (!it.init)
                 {
-                    std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
+                    std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                     exit(1);
                 }
             }
@@ -680,7 +680,7 @@ expr:
         auto it = variables[$1->name];
         if (!it.init)
             {
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
         }
@@ -688,7 +688,7 @@ expr:
             auto it = variables[$3->name];
             if (!it.init)
             {
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
             }
         }
@@ -707,6 +707,9 @@ expr:
             writeAsm("LOAD 2\n");
             writeAsm("LOAD 3\n");
         }
+        jumpLabel("JZERO 2 ", asmline);
+        pompBigValue(0,address);
+        address = address + 1;
         writeAsm("ZERO 4\n");
         std :: string result;
         int jumpline;
@@ -739,12 +742,15 @@ expr:
         writeAsm(result+"\n"); // line 17
         writeAsm("STORE 4\n");
         writeAsm("ADD 1\n");
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
+        labelToLine(asmline);
+        writeAsm("ZERO 1\n");
     }
 	| value '/' value  {
         if(!$1->isNum){
             auto it = variables[$1->name];
             if (!it.init){
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
         }
@@ -752,7 +758,7 @@ expr:
             auto it = variables[$3->name];
             if (!it.init)
             {
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
             }
         }
@@ -888,7 +894,7 @@ expr:
         if(!$1->isNum){
             auto it = variables[$1->name];
             if (!it.init){
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
         }
@@ -896,7 +902,7 @@ expr:
             auto it = variables[$3->name];
             if (!it.init)
             {
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
             }
         }
@@ -966,7 +972,7 @@ cond:
         if(!$1->isNum){
             auto it = variables[$1->name];
             if (!it.init){
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
         }
@@ -974,7 +980,7 @@ cond:
             auto it = variables[$3->name];
             if (!it.init)
             {
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
             }
         }
@@ -1016,7 +1022,7 @@ cond:
         if(!$1->isNum){
             auto it = variables[$1->name];
             if (!it.init){
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
         }
@@ -1024,7 +1030,7 @@ cond:
             auto it = variables[$3->name];
             if (!it.init)
             {
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
             }
         }// W R0 lub w R1 bedzie wynik 1 - true, 0 - false
@@ -1063,7 +1069,7 @@ cond:
         if(!$1->isNum){
             auto it = variables[$1->name];
             if (!it.init){
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
         }
@@ -1071,7 +1077,7 @@ cond:
             auto it = variables[$3->name];
             if (!it.init)
             {
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
             }
         }//R1 = a MEM[R0] = b
@@ -1105,7 +1111,7 @@ cond:
         if(!$1->isNum){
             auto it = variables[$1->name];
             if (!it.init){
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
         }
@@ -1113,7 +1119,7 @@ cond:
             auto it = variables[$3->name];
             if (!it.init)
             {
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
             }
         }
@@ -1146,7 +1152,7 @@ cond:
         if(!$1->isNum){
             auto it = variables[$1->name];
             if (!it.init){
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
         }
@@ -1154,7 +1160,7 @@ cond:
             auto it = variables[$3->name];
             if (!it.init)
             {
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
             }
         }
@@ -1187,7 +1193,7 @@ cond:
         if(!$1->isNum){
             auto it = variables[$1->name];
             if (!it.init){
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
         }
@@ -1195,7 +1201,7 @@ cond:
             auto it = variables[$3->name];
             if (!it.init)
             {
-                std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
             }
         }
@@ -1243,13 +1249,13 @@ identifier:
         auto it = variables.find(std :: string($1.str));
         if (it == variables.end())
         {
-            std :: cerr << "NOT DECLARED\t" << $1.str << std :: endl;
+            std :: cerr << "ERROR: VARIABLE NOT DECLARED\t" << $1.str << std :: endl;
             exit(1);
         }
         /* czy ARRAY  */
         Variable var = variables[std  :: string($1.str)];
         if( var.array){
-            std :: cerr << "VARIABLE IS ARRAY" << $1.str << std :: endl;
+            std :: cerr << "ERROR: VARIABLE IS ARRAY" << $1.str << std :: endl;
             exit(1);
         }
 
@@ -1264,13 +1270,13 @@ identifier:
         auto it = variables.find(std :: string($1.str));
         if (it == variables.end())
         {
-            std :: cerr << "NOT DECLARED\t" << $1.str << std :: endl;
+            std :: cerr << "ERROR: VARIABLE NOT DECLARED\t" << $1.str << std :: endl;
             exit(1);
         }
         /* czy ARRAY  */
         Variable var = variables[std  :: string($1.str)];
         if( !var.array){
-            std :: cerr << "VARIABLE ISNT ARRAY" << $1.str << std :: endl;
+            std :: cerr << "ERROR: VARIABLE ISNT ARRAY" << $1.str << std :: endl;
             exit(1);
         }
 
@@ -1278,14 +1284,14 @@ identifier:
         it = variables.find(std :: string($3.str));
         if (it == variables.end())
         {
-            std :: cerr << "NOT DECLARED\t" << $3.str << std :: endl;
+            std :: cerr << "ERROR: NOT DECLARED\t" << $3.str << std :: endl;
             exit(1);
         }
 
         /* czy NIE ARRAY  */
         var = variables[std  :: string($3.str)];
         if( var.array){
-            std :: cerr << "VARIABLE CANT BE ARRAY" << $3.str << std :: endl;
+            std :: cerr << "ERROR: VARIABLE CANT BE ARRAY" << $3.str << std :: endl;
             exit(1);
         }
 
@@ -1308,19 +1314,19 @@ identifier:
         auto it = variables.find(std :: string($1.str));
         if (it == variables.end())
         {
-            std :: cerr << "NOT DECLARED\t" << $1.str << std :: endl;
+            std :: cerr << "ERROR: VARIABLE NOT DECLARED\t" << $1.str << std :: endl;
             exit(1);
         }
 
         /* czy ARRAY  */
         Variable var = variables[std  :: string($1.str)];
         if( !var.array){
-            std :: cerr << "VARIABLE ISNT ARRAY\t" << $1.str << std :: endl;
+            std :: cerr << "ERROR: VARIABLE ISNT ARRAY\t" << $1.str << std :: endl;
             exit(1);
         }
             /* czy OUT OF RANGE  */
         if( var.len <= atoll($3.str)){
-            std :: cerr << "OUT OF RANGE\t" << $1.str << std :: endl;
+            std :: cerr << "ERROR: OUT OF RANGE\t" << $1.str << std :: endl;
             exit(1);
         }
 

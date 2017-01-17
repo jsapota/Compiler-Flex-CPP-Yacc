@@ -198,6 +198,14 @@ command:
             ustawiamy R0 na jego address
             zapisujemy wartosc
          */
+         if(! $2->isNum)
+         {
+             auto it = variables[$2->name];
+             if (!it.init){
+                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $2->name << std :: endl;
+                 exit(1);
+             }
+         }
          auto it = variables[$2->name];
          if (it.iter){
              std :: cerr << "ERROR: VARIABLE IS ITERATOR\t" << $2->name << std :: endl;
@@ -1255,7 +1263,7 @@ identifier:
         /* czy ARRAY  */
         Variable var = variables[std  :: string($1.str)];
         if( var.array){
-            std :: cerr << "ERROR: VARIABLE IS ARRAY" << $1.str << std :: endl;
+            std :: cerr << "ERROR: VARIABLE IS ARRAY " << $1.str << std :: endl;
             exit(1);
         }
 

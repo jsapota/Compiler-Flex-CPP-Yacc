@@ -714,17 +714,13 @@ expr:
             writeAsm("LOAD 3\n");
         }
         jumpLabel("JZERO 2 ", asmline);
+        writeAsm("DEC 2\n");
+        jumpLabel("JZERO 2 ", asmline);
         pompBigValue(0,address);
         address = address + 1;
         writeAsm("ZERO 4\n");
-        std :: string result;
-        int jumpline;
-        jumpline = asmline + 2;
-        result = "JODD 3 " + std::to_string(jumpline);
-        writeAsm(result+"\n");  // line 1 //  nieparzyste to ET1
-        jumpline = asmline + 9;
-        result = "JUMP " + std::to_string(jumpline);
-        writeAsm(result+"\n");  // line 2 //  parzyste to ET2
+        writeAsm("JODD 3 " + std::to_string(asmline + 2)+"\n");  // line 1 //  nieparzyste to ET1
+        writeAsm("JUMP " + std::to_string(asmline + 9)+"\n");  // line 2 //  parzyste to ET2
         writeAsm("STORE 1\n");   // line 3
         writeAsm("ADD 4\n");    // line 4
         writeAsm("DEC 2\n");    // line 5
@@ -732,22 +728,18 @@ expr:
         writeAsm("SHL 1\n");    // line 7
         writeAsm("DEC 3\n");    // line 8
         writeAsm("SHR 3\n");    // line 9
-        jumpline = asmline + 4;
-        result = "JUMP " + std::to_string(jumpline);
-        writeAsm(result+"\n");  // line 10
+        writeAsm("JUMP " + std::to_string(asmline + 4)+"\n");  // line 10
         writeAsm("SHR 2\n"); // line 11
         writeAsm("SHL 1\n"); // line 12
         writeAsm("SHR 3\n"); // line 13 //  krok while a = a/2
-        jumpline = asmline + 4;
         writeAsm("DEC 3\n"); // line 14 // dla a = 1 konczymy petle
-        result = "JZERO 3 " + std::to_string(jumpline);
-        writeAsm(result+"\n"); // line 15
+        writeAsm("JZERO 3 " + std::to_string(asmline + 4)+"\n"); // line 15
         writeAsm("INC 3\n"); // line 16
-        jumpline = asmline - 16;
-        result = "JUMP " + std::to_string(jumpline);
-        writeAsm(result+"\n"); // line 17
+        writeAsm("JUMP " + std::to_string(asmline - 16)+"\n"); // line 17
         writeAsm("STORE 4\n");
         writeAsm("ADD 1\n");
+        writeAsm("JUMP " + std :: to_string(asmline + 3) + "\n");
+        labelToLine(asmline);
         writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
         labelToLine(asmline);
         writeAsm("ZERO 1\n");
@@ -768,6 +760,14 @@ expr:
                 exit(1);
             }
         }
+
+
+        // BLAD DZIELENIA PRZEZ ZERO
+        if($3->val == 0){
+            std :: cerr << "ERROR: CANT DIVIDE BY ZERO\t" << $3->name << std :: endl;
+            exit(1);
+        }
+
         writeAsm("ZERO 4\n");
         // Czysty assembler
         if($1->isNum){
@@ -879,10 +879,9 @@ expr:
         writeAsm("JUMP " + std :: to_string(asmline + 5) + "\n");
         labelToLine(asmline);
         writeAsm("ZERO 1\n");
-        writeAsm("JUMP " + std :: to_string(asmline + 3) + "\n");
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
         labelToLine(asmline);
         writeAsm("ZERO 1\n");
-        writeAsm("INC 1\n");
     }
 	| value '%' value  {
         if(!$1->isNum){
@@ -931,8 +930,9 @@ expr:
         writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
         jumpLabel("JUMP ", asmline);  // zwroc 0 bo b > a, b == 1
         // koniec testow
-        pompBigValue(0,address);
-        address = address + 1;
+        writeAsm("ZERO 3\n");
+        writeAsm("ZERO 4\n");
+
         // MOD ?? ;/
         writeAsm("JZERO 1 " + std :: to_string(asmline + 20) + "\n");
         writeAsm("STORE 1\n");  // bk a
@@ -954,10 +954,8 @@ expr:
         writeAsm("ZERO 1\n");   // bk a
         writeAsm("ADD 1\n");    // bk a
         writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
-
-        // reakcje na b = 0 i b = 1
         labelToLine(asmline);
-        writeAsm("ZERO 1\n");
+        writeAsm("ZERO 1\n"); // reakcje na b = 0 i b = 1
     }
 ;
 
@@ -1233,8 +1231,7 @@ value:
         $$->isNum = true;
         $$->val = atoll($1.str);
     }
-	| identifier{
-    }
+	| identifier
 ;
 
 identifier:

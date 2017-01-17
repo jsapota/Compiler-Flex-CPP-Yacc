@@ -1,4 +1,4 @@
-Wywalilo ex54
+EX54 ,EX69 to samo zadanie tyle ze w petli wyniki:
 calkiem rozne outputy
 READ n;
 
@@ -11,7 +11,7 @@ FOR i FROM 100 DOWNTO 1 DO
 ENDFOR
 
 WRITE t[0];
-EX69 to samo zadanie tyle ze w petli wyniki:
+
 END
 INPUT
 100
@@ -29,5 +29,68 @@ Uruchamianie programu.
 > 279978646331832458045097716568800101472147904793144864405778891685652799979689746826824391928469554858761093762481671274753555632750592000000000000000000000000
 Skończono program (czas: 121789).
 jakub@Casaya:~/Pulpit/compi$ 
+
+
+
+
+
+
+
+
+
+
+
+EX72
+chodzi dokladnie o nastepujace dzielenie
+b := 18;
+
+a := 100000 / b;
+WRITE a;
+jezeli zamiast tego damy
+c := 100000;
+a := c /b
+WRITE a; 
+
+to juz dziala normalnie
+
+
+
+
+
+
+
+EX74
+VAR
+
+a b c
+
+BEGIN
+
+b := 16;
+
+Jezeli wywalimy ten kawalek to dziala normalnie
+a := 100;
+c := a / 8;
+WRITE c;
+
+c := a / b;
+WRITE c;
+kawalek do tego miejsca
+
+READ a;
+c := a / 8;
+WRITE c;
+
+c := a / b;
+WRITE c;
+
+READ a;
+READ b;
+
+c := a / b;
+WRITE c;
+
+END
+
 
 

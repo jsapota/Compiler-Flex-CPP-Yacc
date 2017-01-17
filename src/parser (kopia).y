@@ -198,6 +198,7 @@ command:
             ustawiamy R0 na jego address
             zapisujemy wartosc
          */
+
          auto it = variables[$2->name];
          if (it.iter){
              std :: cerr << "ERROR: VARIABLE IS ITERATOR\t" << $2->name << std :: endl;
@@ -207,7 +208,6 @@ command:
          pomp_addr(0, *$2);
          writeAsm("STORE 1\n");
          variables[$2->name].init = true;
-
     }
 	| WRITE value ';'{
         /*
@@ -221,16 +221,13 @@ command:
                 pompuj do R1
                 wypisz R1 na stdout
         */
-        if(! $2->isNum)
+        if(!$2->isNum)
         {
             auto it = variables[$2->name];
             if (!it.init){
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $2->name << std :: endl;
                 exit(1);
             }
-        }
-        if(! $2->isNum)
-        {
             pomp_addr(0, *$2);
             writeAsm("LOAD 1\n");
             writeAsm("PUT 1\n");
@@ -564,25 +561,27 @@ forendDOWNTO:
 
 expr:
 	value{
-            if($1->isNum) {
-                pomp(1,$1->val);
-            }
-            else
+        if(!$1->isNum){
+        auto it = variables[$1->name];
+        if (!it.init)
             {
-                auto it = variables[$1->name];
-                if (!it.init)
-                    {
-                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
-                        exit(1);
-                    }                
-                pomp_addr(0, *$1);
-                writeAsm("LOAD 1\n");
+                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                exit(1);
             }
+        }
+        if($1->isNum) {
+            pomp(1,$1->val);
+        }
+        else
+        {
+            pomp_addr(0, *$1);
+            writeAsm("LOAD 1\n");
+        }
     }
 	| value '+' value  {
             if(!$1->isNum){
             auto it = variables[$1->name];
-                if (!it.init)
+            if (!it.init)
                 {
                     std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                     exit(1);
@@ -746,6 +745,8 @@ expr:
         jumpline = asmline - 16;
         result = "JUMP " + std::to_string(jumpline);
         writeAsm(result+"\n"); // line 17
+        pompBigValue(0,address);
+        address = address + 1;
         writeAsm("STORE 4\n");
         writeAsm("ADD 1\n");
         writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
@@ -808,8 +809,6 @@ expr:
 
 
         // tutaj juz jest true to mamy skoczyc
-        pompBigValue(0,address);
-        address = address + 1;
         if($1->isNum){
             pomp(1,$1->val); //a
             pomp(4,$3->val); //a
@@ -898,78 +897,79 @@ expr:
     }
 	| value '%' value  {
         if(!$1->isNum){
-            auto it = variables[$1->name];
-            if (!it.init){
-                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
-                exit(1);
-            }
-        }
-        if(!$3->isNum){
-            auto it = variables[$3->name];
-            if (!it.init)
-            {
-                std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
-                exit(1);
-            }
-        }
-        std :: string result;
-        writeAsm("ZERO 4\n");
-        // Czysty assembler
-        if($1->isNum){
-            pomp(1,$1->val); //a
-            pomp(4,$3->val); //a
-        }
-        else{
-            pomp_addr(0,*$1);
-            writeAsm("LOAD 1\n");
-            writeAsm("LOAD 4\n");
-        }
-        if($3->isNum){
-            pomp(2,$3->val); //b
-            pomp(3,$3->val); //b
-        }
-        else{
-            pomp_addr(0,*$3);
-            writeAsm("LOAD 2\n");
-            writeAsm("LOAD 3\n");
-        }
-        pompBigValue(0,address);
-        address = address + 1;
-        writeAsm("STORE 3\n");
-        writeAsm("SUB 4\n"); // b >= a?
-        writeAsm("DEC 3\n"); // b == 1
-        writeAsm("JZERO 4 " + std :: to_string(asmline + 3) + "\n");
-        writeAsm("JZERO 3 " + std :: to_string(asmline + 2) + "\n");
-        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
-        jumpLabel("JUMP ", asmline);  // zwroc 0 bo b > a, b == 1
-        // koniec testow
-        pompBigValue(0,address);
-        address = address + 1;
-        // MOD ?? ;/
-        writeAsm("JZERO 1 " + std :: to_string(asmline + 20) + "\n");
-        writeAsm("STORE 1\n");  // bk a
-        writeAsm("ZERO 3\n");   // bk a
-        writeAsm("ADD 3\n");    // bk a
-        writeAsm("STORE 2\n");  // wez b
-        writeAsm("SUB 1\n");    // a -= b
-        writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");
-        writeAsm("JUMP " + std :: to_string(asmline - 6) + "\n");
-        writeAsm("STORE 3\n");  // bk a
-        writeAsm("ZERO 4\n");   // bk a
-        writeAsm("ADD 4\n");    // bk a
-        writeAsm("STORE 2\n");  // wez b
-        writeAsm("INC 4\n");    // a + 1
-        writeAsm("SUB 4\n");    // a + 1 - b == 0?
-        writeAsm("JZERO 4 " + std :: to_string(asmline + 2) + "\n");
-        writeAsm("JUMP " + std :: to_string(asmline + 6) + "\n");
-        writeAsm("STORE 3\n");  // bk a
-        writeAsm("ZERO 1\n");   // bk a
-        writeAsm("ADD 1\n");    // bk a
-        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
+               auto it = variables[$1->name];
+               if (!it.init){
+                   std :: cerr << "VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
+                   exit(1);
+               }
+           }
+           if(!$3->isNum){
+               auto it = variables[$3->name];
+               if (!it.init)
+               {
+                   std :: cerr << "VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
+                   exit(1);
+               }
+           }
+           std :: string result;
+           int jumpline;
+           writeAsm("ZERO 4\n");
+           // Czysty assembler
+           if($1->isNum){
+               pomp(1,$1->val); //a
+               pomp(4,$3->val); //a
+           }
+           else{
+               pomp_addr(0,*$1);
+               writeAsm("LOAD 1\n");
+               writeAsm("LOAD 4\n");
+           }
+           if($3->isNum){
+               pomp(2,$3->val); //b
+               pomp(3,$3->val); //b
+           }
+           else{
+               pomp_addr(0,*$3);
+               writeAsm("LOAD 2\n");
+               writeAsm("LOAD 3\n");
+           }
+           pompBigValue(0,address);
+           address = address + 1;
+           writeAsm("STORE 3\n");
+           writeAsm("SUB 4\n"); // b >= a?
+           writeAsm("DEC 3\n"); // b == 1
+           writeAsm("JZERO 4 " + std :: to_string(asmline + 3) + "\n");
+           writeAsm("JZERO 3 " + std :: to_string(asmline + 2) + "\n");
+           writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
+           jumpLabel("JUMP ", asmline);  // zwroc 0 bo b > a, b == 1
+           // koniec testow
+           pompBigValue(0,address);
+           address = address + 1;
+           // MOD ?? ;/
+           writeAsm("JZERO 1 " + std :: to_string(asmline + 20) + "\n");
+           writeAsm("STORE 1\n");  // bk a
+           writeAsm("ZERO 3\n");   // bk a
+           writeAsm("ADD 3\n");    // bk a
+           writeAsm("STORE 2\n");  // wez b
+           writeAsm("SUB 1\n");    // a -= b
+           writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");
+           writeAsm("JUMP " + std :: to_string(asmline - 6) + "\n");
+           writeAsm("STORE 3\n");  // bk a
+           writeAsm("ZERO 4\n");   // bk a
+           writeAsm("ADD 4\n");    // bk a
+           writeAsm("STORE 2\n");  // wez b
+           writeAsm("INC 4\n");    // a + 1
+           writeAsm("SUB 4\n");    // a + 1 - b == 0?
+           writeAsm("JZERO 4 " + std :: to_string(asmline + 2) + "\n");
+           writeAsm("JUMP " + std :: to_string(asmline + 6) + "\n");
+           writeAsm("STORE 3\n");  // bk a
+           writeAsm("ZERO 1\n");   // bk a
+           writeAsm("ADD 1\n");    // bk a
+           writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
 
-        // reakcje na b = 0 i b = 1
-        labelToLine(asmline);
-        writeAsm("ZERO 1\n");
+           // reakcje na b = 0 i b = 1
+           labelToLine(asmline);
+           writeAsm("ZERO 1\n");
     }
 ;
 
@@ -1255,13 +1255,13 @@ identifier:
         auto it = variables.find(std :: string($1.str));
         if (it == variables.end())
         {
-            std :: cerr << "ERROR: NOT DECLARED\t" << $1.str << std :: endl;
+            std :: cerr << "ERROR: VARIABLE NOT DECLARED\t" << $1.str << std :: endl;
             exit(1);
         }
         /* czy ARRAY  */
         Variable var = variables[std  :: string($1.str)];
         if( var.array){
-            std :: cerr << "ERROR: VARIABLE IS ARRAY" << $1.str << std :: endl;
+            std :: cerr << "ERROR: VARIABLE IS ARRAY " << $1.str << std :: endl;
             exit(1);
         }
 
@@ -1290,7 +1290,7 @@ identifier:
         it = variables.find(std :: string($3.str));
         if (it == variables.end())
         {
-            std :: cerr << "ERROR: VARIABLE NOT DECLARED\t" << $3.str << std :: endl;
+            std :: cerr << "ERROR: NOT DECLARED\t" << $3.str << std :: endl;
             exit(1);
         }
 
@@ -1332,7 +1332,7 @@ identifier:
         }
             /* czy OUT OF RANGE  */
         if( var.len <= atoll($3.str)){
-            std :: cerr << "ERROR: INDEX OUT OF RANGE\t" << $1.str << std :: endl;
+            std :: cerr << "ERROR: OUT OF RANGE\t" << $1.str << std :: endl;
             exit(1);
         }
 

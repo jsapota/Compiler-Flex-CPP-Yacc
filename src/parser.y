@@ -785,10 +785,30 @@ expr:
         }
         pompBigValue(0, b);   // pierwsza zmienna tymczasowa
         writeAsm("STORE 2\n");
+        pompBigValue(0, a);   // pierwsza zmienna tymczasowa
+        writeAsm("STORE 1\n");
         pompBigValue(0, smietnik);   // pierwsza zmienna tymczasowa
+
+
+        // a != b
+        writeAsm("STORE 2\n");      // b -> memR0
+        writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
+        writeAsm("STORE 3\n");      // a -> memR0
+        writeAsm("SUB 2\n");           // R2 = b - memR0 = b - a
+        writeAsm("STORE 2\n");
+        writeAsm("ADD 1\n");
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");       // a > b wiec false
+        jumpLabel("JUMP ", asmline);  // false
+        pompBigValue(0, b);   // pierwsza zmienna tymczasowa
+        writeAsm("LOAD 2\n");
+        pompBigValue(0, a);   // pierwsza zmienna tymczasowa
+        writeAsm("LOAD 1\n");
+        pompBigValue(0, smietnik);   // pierwsza zmienna tymczasowa
+        // b > a?
         writeAsm("STORE 4\n");      // wez b
         writeAsm("SUB 3\n");        // odejmij od a
-        jumpLabel("JZERO 3 ", asmline); // zwroc 0 bo b > a
+        jumpLabel("JZERO 3 ", asmline); // zwroc 0 bo b > a  == a > b
         jumpLabel("JZERO 2 ", asmline); // zwroc 0 bo b == 0
         writeAsm("DEC 2\n");            // b - 1 == 0?
         jumpLabel("JZERO 2 ", asmline); // zwroc a bo b == 1
@@ -796,6 +816,8 @@ expr:
         jumpLabel("JZERO 2 ", asmline); // zwroc a/2 bo b == 2
         writeAsm("INC 2\n");            // wracamy do starego b
         writeAsm("INC 2\n");            // wracamy do starego b
+
+
         writeAsm("ZERO 4\n");           // skoro przeszlo testy to a >= b
         writeAsm("INC 4\n");            // wiec 1
         int startLine = asmline;    // store'ujemy w zmiennej smietnik
@@ -853,8 +875,15 @@ expr:
         labelToLine(asmline);
         pompBigValue(0, wynik);
         writeAsm("LOAD 1\n");   // wczytajmy do 1
-        writeAsm("JUMP " + std :: to_string(asmline + 4) + "\n"); // przeskoczmy wszystkie opcje testowe
-        address = address + 1;
+        writeAsm("JUMP " + std :: to_string(asmline + 7) + "\n"); // przeskoczmy wszystkie opcje testowe
+
+
+
+
+
+
+
+        // wyniki testow
         labelToLine(asmline);   // jezeli b == 2
         writeAsm("SHR 1\n");    // jezeli b == 2 to po co dzielic mamy SHR
         labelToLine(asmline);   // jezeli b == 1 to zwroc a
@@ -862,6 +891,10 @@ expr:
         labelToLine(asmline);   // jezeli b = 0
         labelToLine(asmline);   // jezeli b > a
         writeAsm("ZERO 1\n");   // zwroc 0
+        writeAsm("JUMP " + std :: to_string(asmline + 3) + "\n"); // przeskoczmy wszystkie opcje testowe
+        labelToLine(asmline);   // a == b
+        writeAsm("ZERO 1\n");
+        writeAsm("INC 1\n");
         address = poWszystkim;
     }
 	| value '%' value  {
@@ -1010,7 +1043,7 @@ cond:
         writeAsm("STORE 2\n");      // b -> memR0
         writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
         writeAsm("STORE 3\n");      // a -> memR0
-        writeAsm("SUB 2");           // R2 = b - memR0 = b - a
+        writeAsm("SUB 2\n");           // R2 = b - memR0 = b - a
         // a - b = 0 ?
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek
         // skocz false
@@ -1059,7 +1092,7 @@ cond:
         writeAsm("STORE 2\n");      // b -> memR0
         writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
         writeAsm("STORE 3\n");      // a -> memR0
-        writeAsm("SUB 2");           // R2 = b - memR0 = b - a
+        writeAsm("SUB 2\n");           // R2 = b - memR0 = b - a
         writeAsm("STORE 2\n");
         writeAsm("ADD 1\n");
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek

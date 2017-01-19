@@ -345,33 +345,64 @@ forbegTO:
         pomp_addr(0, var);
         writeAsm("STORE 1\n");
 
+        /* robimy iterator pomocniczy */
+        Variable var2;
+        var2.name = std :: string($2.str) + "2";
+        var2.reg = -1;
+        var2.addr = address;
+        address = address + 1;
+        var2.len = 0;
+        var2.isNum = false;
+        var2.array = false;
+        var2.init = true; /* zaraz ustawimy ten iterator */
+        var2.upToDate = true;
+        var2.iter = true; /* tak to jest iterator */
+        var2.val = 0;
+        variables.insert ( std::pair<std :: string,Variable>(var2.name,var2) );
+
+        /* 2 iterator to licznik wykonan ma sie wykonac end + 1 - begin razy */
+
+        /* czytaj end i incuj */
+        if(! $6->isNum)
+        {
+            pomp_addr(0, *$6);
+            writeAsm("LOAD 1\n");
+            writeAsm("INC 1\n");
+        }
+        else
+        {
+            pomp(1, $6->val);
+            writeAsm("INC 1\n");
+        }
+
+
+        /* ustaw R0 na begin */
+        if(! $4->isNum)
+            pomp_addr(0, *$4);
+        else
+        {
+            pomp(2, $4->val);
+            pompBigValue(0, address);
+            writeAsm("STORE 2\n");
+        }
+
+        /* mozemy odejmowac */
+        writeAsm("SUB 1\n");
+
+        /* teraz w 1 mamy ilosc wykonan petli zapiszmy do iteratora2 */
+        pomp_addr(0, var2);
+
+        writeAsm("STORE 1\n");
+
+        /* KONIEC PRZYGOTOWANIA FORA */
         /* zapamietujemy linie */
         int64_t line = asmline;
         looplines.push(line);
 
-        /* COND: it <= value2 */
-
-        /* wczytaj it */
-        pomp_addr(0, var);
+        /* wczytaj drugi iterator */
+        pomp_addr(0, var2);
         writeAsm("LOAD 1\n");
-
-        if($6->isNum){
-            pomp(2,$6->val); //b
-            pompBigValue(0, address + 1);
-            writeAsm("STORE 2\n");
-        }
-        else{
-            pomp_addr(0,*$6);
-        }
-        /* TERAZ MAMY W R1 = a MEM[R0] = b */
-        // a < b lub a <= b
-        writeAsm("SUB 1\n");      //R2 = R2 - memR0 = a - b = 0
-
-        /* teraz asmline wskazuje na linie JZER1 wiec zeby przeskoczyc next inst robimy + 2 */
-        writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");      //Jezeli R2 == 0 to mamy spelniony warunek
-
-        jumpLabel("JUMP ", asmline);
-
+        jumpLabel("JZERO 1 ", asmline); /* jesli it == 0 znaczy sie ze wszystko wykonalismy */
     }
     ;
 forendTO:
@@ -388,6 +419,13 @@ forendTO:
         writeAsm("INC 1\n");
         writeAsm("STORE 1\n");
 
+        /* DEC drugiego iteratora */
+        auto it = variables[var->name + "2"];
+        pomp_addr(0, it);
+        writeAsm("LOAD 1\n");
+        writeAsm("DEC 1\n");
+        writeAsm("STORE 1\n");
+
         int64_t line;
         line = looplines.top();
         looplines.pop();
@@ -397,8 +435,11 @@ forendTO:
         labelToLine(asmline);
 
         /* usun iteratora z mapy */
-        auto it = variables.find(var->name);
-        variables.erase(it);
+        auto it2 = variables.find(var->name);
+        variables.erase(it2);
+
+        auto it3 = variables.find(it.name);
+        variables.erase(it3);
 
     };
 forbegDOWNTO:
@@ -790,7 +831,7 @@ expr:
         pompBigValue(0, smietnik);   // pierwsza zmienna tymczasowa
 
 
-        // a != b
+        // a == b
         writeAsm("STORE 2\n");      // b -> memR0
         writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
         writeAsm("STORE 3\n");      // a -> memR0
@@ -799,7 +840,7 @@ expr:
         writeAsm("ADD 1\n");
         writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek
         writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");       // a > b wiec false
-        jumpLabel("JUMP ", asmline);  // false
+        jumpLabel("JUMP ", asmline);  // true a == b
         pompBigValue(0, b);   // pierwsza zmienna tymczasowa
         writeAsm("LOAD 2\n");
         pompBigValue(0, a);   // pierwsza zmienna tymczasowa
@@ -916,8 +957,12 @@ expr:
         cln :: cl_I smietnik = address;
         cln :: cl_I a = address + 1;
         cln :: cl_I b = address + 2;
-        cln :: cl_I wynik = address + 3;
-        cln :: cl_I poWszystkim = address + 4;
+        cln :: cl_I aBk = address + 3;
+        cln :: cl_I wynik = address + 4;
+        cln :: cl_I poWszystkim = address + 5;
+        pompBigValue(0, wynik);   // druga zmienna tymczasowa
+        writeAsm("ZERO 4\n");       // nadaj wynik 0
+        writeAsm("STORE 4\n");      //
         if($1->isNum){
             pomp(1,$1->val); //a
             pomp(3,$1->val); //a
@@ -936,28 +981,40 @@ expr:
             writeAsm("LOAD 2\n");
             writeAsm("LOAD 4\n");
         }
-
-        // TESTY CZY JEST SENS
-        pompBigValue(0, a);   // pierwsza zmienna tymczasowa
-        writeAsm("STORE 1\n");
         pompBigValue(0, b);   // pierwsza zmienna tymczasowa
         writeAsm("STORE 2\n");
+        pompBigValue(0, a);   // pierwsza zmienna tymczasowa
+        writeAsm("STORE 1\n");
+        pompBigValue(0, aBk);   // pierwsza zmienna tymczasowa
+        writeAsm("STORE 1\n");
         pompBigValue(0, smietnik);   // pierwsza zmienna tymczasowa
-        writeAsm("STORE 4\n");
-        writeAsm("SUB 3\n");
-        writeAsm("DEC 2\n");
-        jumpLabel("JZERO 2 ", asmline);  // a bo b == 1
-        writeAsm("INC 2\n");
-        jumpLabel("JZERO 3 ", asmline);  // 0 bo b > a
-        jumpLabel("JZERO 2 ", asmline);  // 0 bo b == 0
 
 
+        // a == b
+        writeAsm("STORE 2\n");      // b -> memR0
+        writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
+        writeAsm("STORE 3\n");      // a -> memR0
+        writeAsm("SUB 2\n");           // R2 = b - memR0 = b - a
+        writeAsm("STORE 2\n");
+        writeAsm("ADD 1\n");
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 2) + "\n");    // Jezeli R1 == 0 to mamy spelniony warunek
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");       // a > b wiec false
+        jumpLabel("JUMP ", asmline);  // true a == b
+        pompBigValue(0, b);   // pierwsza zmienna tymczasowa
+        writeAsm("LOAD 2\n");
+        pompBigValue(0, a);   // pierwsza zmienna tymczasowa
+        writeAsm("LOAD 1\n");
+        pompBigValue(0, smietnik);   // pierwsza zmienna tymczasowa
+        // b > a?
+        writeAsm("STORE 4\n");      // wez b
+        writeAsm("SUB 3\n");        // odejmij od a
+        jumpLabel("JZERO 3 ", asmline); // zwroc 0 bo b > a  == a > b
+        jumpLabel("JZERO 2 ", asmline); // zwroc 0 bo b == 0
+        writeAsm("DEC 2\n");            // b - 1 == 0?
+        jumpLabel("JZERO 2 ", asmline); // zwroc a bo b == 1
+        writeAsm("INC 2\n");            // wracamy do starego b
 
-
-
-        // zaczynamy dzialania
-        // a > b wiec wynik conajmniej 1
-        //  while a > b
+        // R1 = a R3 = a R2 = b R4 = b
         int startLine = asmline;    // store'ujemy w zmiennej smietnik
         writeAsm("STORE 1\n");      // wez a
         writeAsm("LOAD 3\n");       // backup do a w R3
@@ -966,37 +1023,64 @@ expr:
         jumpLabel("JZERO 1 ", asmline);     // > 0 ??
         writeAsm("ADD 1\n");        // cofamy a - b zeby dalej miec glowna liczbe
         writeAsm("SHL 2\n"); // b = 2b
-        writeAsm("JUMP " + std :: to_string(startLine) +"\n");  //  koniec while
+        writeAsm("JUMP " + std :: to_string(startLine) +"\n");
+        // koniec while
 
-
-        // DO
-        labelToLine(asmline);       /////////////////  a <= b
+        // co po while
+        labelToLine(asmline);
         writeAsm("SHR 2\n");        // powrot do ostatniego dobrego b
         writeAsm("STORE 3\n");      // wez backup a
         writeAsm("LOAD 1\n");       // wsadz do R1
         writeAsm("STORE 2\n");      // wez b
-        writeAsm("SUB 1\n");        //
-        writeAsm("STORE 1\n");  // wezmy R1 do memR0
-        writeAsm("LOAD 3\n");   // wsadzmy do R3
-        writeAsm("STORE 2\n");  // wezmy b
-        writeAsm("SUB 3\n");    // odejmijmy do wyniku w R1
-        jumpLabel("JZERO 3 ",asmline);
+        writeAsm("SUB 1\n");        // a - b^max
+        pompBigValue(0, a);         // druga zmienna tymczasowa
+        writeAsm("STORE 1\n");      // store a
+        pompBigValue(0, b);         // przywrocmy pierwotne b
+        writeAsm("LOAD 2\n");
+        pompBigValue(0, smietnik);  // pierwszej zmienna tymczasowa
+        // wrocilismy do a sprzed ostatniego odejmowania a i b = bmax a = a - b i wczytaj pierwotne b
+
+
+        writeAsm("STORE 1\n");      // wezmy R1 do memR0
+        writeAsm("LOAD 3\n");       // wsadzmy do R3
+        writeAsm("STORE 2\n");      // wezmy b
+        writeAsm("SUB 1\n");        // odejmijmy do wyniku w R1
+        writeAsm("JZERO 1 " + std :: to_string(asmline + 4) + "\n");
+        writeAsm("STORE 3\n");
+        writeAsm("LOAD 1\n");
         writeAsm("JUMP " + std :: to_string(startLine) + "\n"); // wrocmy do poczatku while
-        // koniec DO
+        pompBigValue(0, a);         // druga zmienna tymczasowa
+        writeAsm("LOAD 1\n");       // wsadzmy do R1
+        writeAsm("LOAD 3\n");       // wezmy backup a
+        writeAsm("INC 3\n");        // zwiekszmy a o 1
+        pompBigValue(0, smietnik);  // pierwszej zmienna tymczasowa
+        writeAsm("STORE 2\n");      // wezmy b
+        writeAsm("SUB 3\n");        // odejmijmy od a+1
+        pompBigValue(0, a);
+        writeAsm("LOAD 4\n");
+        jumpLabel("JZERO 3 ", asmline); // jezeli dalej 0 to znaczy ze a << b
+        writeAsm("JUMP " + std :: to_string(asmline + 5) + "\n");
+        labelToLine(asmline);
+        writeAsm("STORE 4\n");       // wczytajmy do 1
+        writeAsm("ZERO 1\n");       // wczytajmy do 1
+        writeAsm("ADD 1\n");       // wczytajmy do 1
+        // przeskoczmy wszystkie opcje testowe
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
+        // koniec dzielenia
 
 
-        // sprawdzmy jeszcze czy moze po wszystkich dzialaniach mamy a == b czyli wynik++
-        labelToLine(asmline);       // zwroc a
-        writeAsm("STORE 1\n");   // wsadzmy do R1
-        writeAsm("LOAD 3\n");  // wezmy backup a
-        writeAsm("INC 3\n");    // zwiekszmy a o 1
-        writeAsm("STORE 2\n");  // wezmy b
-        writeAsm("SUB 3\n");    // odejmijmy od a+1
-        writeAsm("JZERO 3 "+ std :: to_string(asmline + 2) + "\n"); // jezeli dalej 0 to znaczy ze a << b
-        labelToLine(asmline);       // jezeli b == 1
-        labelToLine(asmline);       // jezeli b = 0
-        labelToLine(asmline);       // jezeli b > a
+        // wyniki testow
+        labelToLine(asmline);   // jezeli b == 1
+        labelToLine(asmline);   // jezeli b = 0
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
+        labelToLine(asmline);   // jezeli b > a
+        writeAsm("JUMP " + std :: to_string(asmline + 2) + "\n");
+        labelToLine(asmline);   // a == b
         writeAsm("ZERO 1\n");
+        jumpLabel("JUMP ", asmline);
+        pompBigValue(0, aBk);
+        writeAsm("LOAD 1\n");
+        labelToLine(asmline);
         address = poWszystkim;
 
     }

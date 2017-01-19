@@ -179,6 +179,15 @@ command:
             std :: cerr << "ERROR: VARIABLE IS ITERATOR\t" << $1->name << std :: endl;
             exit(1);
         }
+        if(it.array){
+            if(it.varOffset != NULL){
+                auto it2 = variables[it.varOffset->name];
+                if(!it2.init){
+                    std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                    exit(1);
+                }
+            }
+        }
         pomp_addr(0, *$1); // R0 = addres zmiennej
         writeAsm("STORE 1\n"); //
         variables[$1->name].init = true;
@@ -199,6 +208,15 @@ command:
          if (it.iter){
              std :: cerr << "ERROR: VARIABLE IS ITERATOR\t" << $2->name << std :: endl;
              exit(1);
+         }
+         if(it.array){
+             if(it.varOffset != NULL){
+                 auto it2 = variables[it.varOffset->name];
+                 if(!it2.init){
+                     std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                     exit(1);
+                 }
+             }
          }
          writeAsm("GET 1\n");
          pomp_addr(0, *$2);
@@ -294,6 +312,15 @@ forbegTO:
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $4->name << std :: endl;
                 exit(1);
             }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
+            }
         }
         if(! $6->isNum)
         {
@@ -301,6 +328,15 @@ forbegTO:
             if (! it.isNum && !it.init){
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $6->name << std :: endl;
                 exit(1);
+            }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
             }
         }
 
@@ -453,6 +489,15 @@ forbegDOWNTO:
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $4->name << std :: endl;
                 exit(1);
             }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
+            }
         }
         if(! $6->isNum)
         {
@@ -460,6 +505,15 @@ forbegDOWNTO:
             if (! it.isNum && !it.init){
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $6->name << std :: endl;
                 exit(1);
+            }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
             }
         }
 
@@ -612,6 +666,15 @@ expr:
                         std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                         exit(1);
                     }
+                if(it.array){
+                    if(it.varOffset != NULL){
+                        auto it2 = variables[it.varOffset->name];
+                        if(!it2.init){
+                            std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                            exit(1);
+                        }
+                    }
+                }
                 pomp_addr(0, *$1);
                 writeAsm("LOAD 1\n");
             }
@@ -624,6 +687,15 @@ expr:
                     std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                     exit(1);
                 }
+                if(it.array){
+                    if(it.varOffset != NULL){
+                        auto it2 = variables[it.varOffset->name];
+                        if(!it2.init){
+                            std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                            exit(1);
+                        }
+                    }
+                }
             }
             if(!$3->isNum){
                 auto it = variables[$3->name];
@@ -631,6 +703,15 @@ expr:
                 {
                     std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                     exit(1);
+                }
+                if(it.array){
+                    if(it.varOffset != NULL){
+                        auto it2 = variables[it.varOffset->name];
+                        if(!it2.init){
+                            std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                            exit(1);
+                        }
+                    }
                 }
             }
                 // stala i stala
@@ -673,6 +754,15 @@ expr:
                     std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                     exit(1);
                 }
+                if(it.array){
+                    if(it.varOffset != NULL){
+                        auto it2 = variables[it.varOffset->name];
+                        if(!it2.init){
+                            std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                            exit(1);
+                        }
+                    }
+                }
             }
             if(!$3->isNum){
                 auto it = variables[$3->name];
@@ -680,6 +770,15 @@ expr:
                 {
                     std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                     exit(1);
+                }
+                if(it.array){
+                    if(it.varOffset != NULL){
+                        auto it2 = variables[it.varOffset->name];
+                        if(!it2.init){
+                            std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                            exit(1);
+                        }
+                    }
                 }
             }
             // stala i stala
@@ -726,6 +825,15 @@ expr:
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
+            }
         }
         if(!$3->isNum){
             auto it = variables[$3->name];
@@ -733,6 +841,15 @@ expr:
             {
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
+            }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
             }
         }
         if($1->isNum)
@@ -788,6 +905,15 @@ expr:
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
+            }
         }
         if(!$3->isNum){
             auto it = variables[$3->name];
@@ -795,6 +921,15 @@ expr:
             {
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
+            }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
             }
         }
         cln :: cl_I smietnik = address;
@@ -945,6 +1080,15 @@ expr:
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
+            }
         }
         if(!$3->isNum){
             auto it = variables[$3->name];
@@ -952,6 +1096,15 @@ expr:
             {
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
+            }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
             }
         }
         cln :: cl_I smietnik = address;
@@ -1094,6 +1247,15 @@ cond:
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
+            }
         }
         if(!$3->isNum){
             auto it = variables[$3->name];
@@ -1101,6 +1263,15 @@ cond:
             {
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
+            }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
             }
         }
         // Napomuj R2 = a, R3 = a, R4 = b
@@ -1144,6 +1315,15 @@ cond:
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
+            }
         }
         if(!$3->isNum){
             auto it = variables[$3->name];
@@ -1151,6 +1331,15 @@ cond:
             {
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
+            }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
             }
         }// W R0 lub w R1 bedzie wynik 1 - true, 0 - false
         // Napomuj R2 = a, R3 = a, R4 = b
@@ -1191,6 +1380,15 @@ cond:
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
+            }
         }
         if(!$3->isNum){
             auto it = variables[$3->name];
@@ -1198,6 +1396,15 @@ cond:
             {
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
+            }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
             }
         }//R1 = a MEM[R0] = b
         if($1->isNum){
@@ -1233,6 +1440,15 @@ cond:
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
+            }
         }
         if(!$3->isNum){
             auto it = variables[$3->name];
@@ -1240,6 +1456,15 @@ cond:
             {
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
+            }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
             }
         }
         if($3->isNum){
@@ -1274,6 +1499,15 @@ cond:
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
+            }
         }
         if(!$3->isNum){
             auto it = variables[$3->name];
@@ -1281,6 +1515,15 @@ cond:
             {
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
+            }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
             }
         }
         //R1 = a MEM[R0] = b
@@ -1315,6 +1558,15 @@ cond:
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $1->name << std :: endl;
                 exit(1);
             }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
+            }
         }
         if(!$3->isNum){
             auto it = variables[$3->name];
@@ -1322,6 +1574,15 @@ cond:
             {
                 std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << $3->name << std :: endl;
                 exit(1);
+            }
+            if(it.array){
+                if(it.varOffset != NULL){
+                    auto it2 = variables[it.varOffset->name];
+                    if(!it2.init){
+                        std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it.name << std :: endl;
+                        exit(1);
+                    }
+                }
             }
         }
         if($3->isNum){
@@ -1395,6 +1656,21 @@ identifier:
         Variable var = variables[std  :: string($1.str)];
         if( !var.array){
             std :: cerr << "ERROR: VARIABLE ISNT ARRAY" << $1.str << std :: endl;
+            exit(1);
+        }
+
+        if(var.array){
+            if(var.varOffset != NULL){
+                auto it2 = variables[var.varOffset->name];
+                if(!it2.init){
+                    std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << var.name << std :: endl;
+                    exit(1);
+                }
+            }
+        }
+        auto it2 = variables[std  :: string($3.str)];
+        if(!it2.init){
+            std :: cerr << "ERROR: VARIABLE NOT INITIALIZED\t" << it2.name << std :: endl;
             exit(1);
         }
 

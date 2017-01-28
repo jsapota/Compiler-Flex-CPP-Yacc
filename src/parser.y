@@ -966,6 +966,8 @@ expr:
         pompBigValue(0, smietnik);   // pierwsza zmienna tymczasowa
 
 
+        jumpLabel("JZERO 1 ", asmline);  // true a == b
+        jumpLabel("JZERO 2 ", asmline);  // true a == b
         // a == b
         writeAsm("STORE 2\n");      // b -> memR0
         writeAsm("SUB 1\n");        // R1 = a - memR0 = a - b
@@ -1067,8 +1069,13 @@ expr:
         labelToLine(asmline);   // jezeli b = 0
         labelToLine(asmline);   // jezeli b > a
         writeAsm("ZERO 1\n");   // zwroc 0
-        writeAsm("JUMP " + std :: to_string(asmline + 3) + "\n"); // przeskoczmy wszystkie opcje testowe
+        writeAsm("JUMP " + std :: to_string(asmline + 6) + "\n"); // przeskoczmy wszystkie opcje testowe
         labelToLine(asmline);   // a == b
+        writeAsm("JUMP " + std :: to_string(asmline + 3) + "\n");
+        labelToLine(asmline);   // a == 0
+        labelToLine(asmline);   // b == 0
+        writeAsm("ZERO 1\n");
+        writeAsm("JUMP " + std :: to_string(asmline + 3) + "\n");    
         writeAsm("ZERO 1\n");
         writeAsm("INC 1\n");
         address = poWszystkim;

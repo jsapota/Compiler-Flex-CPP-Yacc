@@ -20,7 +20,7 @@ Struktura
 	./src		kody źródłowe .cpp, .l, .y
 
 Pliki źródłowe
-	asm		funkcje pompujace oraz funckja zapisująca kod asm
+	asm		funkcje pompujace oraz funkcja zapisująca kod asm
 	common		zbiór potrzebnych includów
 	variable	struktura do przechowywania zmiennych
 	main		funkcja związana z I/O

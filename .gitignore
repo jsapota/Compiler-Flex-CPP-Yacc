@@ -1,6 +1,6 @@
 #ignore list
 obj/*
-!obj/.gitkeeper
+obj/.gitkeeper
 compiler.out
 *.swp
 include/parser.tab.h
@@ -16,3 +16,4 @@ external/*
 test*
 asm*
 !include/asm.h
+

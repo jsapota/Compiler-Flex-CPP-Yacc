@@ -3,19 +3,14 @@
 
 #include <common.h>
 
-/* Definision of variable structure and inline functions */
-
 typedef struct Variable
 {
 
     std :: string name;
 
     int reg;
-    //zmienilem zakres addresu
     cln :: cl_I addr;
-    //zmienilem zakres tablicy
     cln :: cl_I len;
-    //zakres wartosci
     uint64_t val;
 
     bool isNum;
@@ -25,8 +20,8 @@ typedef struct Variable
     bool iter;
 
 
-    uint64_t offset; /* t[1000] := a + b   offset = 1000 */
-    struct Variable *varOffset; /*  t[b] := a + c  varOffset = ptr --> b*/
+    uint64_t offset;
+    struct Variable *varOffset;
 
 }Variable;
 

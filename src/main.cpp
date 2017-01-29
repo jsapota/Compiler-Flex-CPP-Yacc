@@ -2,17 +2,10 @@
 
 int compile(const char *, const char *);
 
-/*
-    argv[1] = input file
-    argv[2] = output file
-*/
-
-/* TODO: Dorobic jakis help i opis uzycia */
-
 void usage(void)
 {
     std :: cout << "KOMPILATOR" << std :: endl
-                << "./compiler.out inputfile outputfile" << std :: endl;
+                << "./compiler.out nazwaInputu nazwaOutputu" << std :: endl;
 }
 
 int main(int argc, char **argv)

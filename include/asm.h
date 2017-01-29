@@ -5,15 +5,11 @@
 #include <vector>
 #include <variable.h>
 
-/* definision of assembler function  ( program --> asm code  ) */
-
 extern std :: vector <std :: string> code;
 extern uint64_t asmline;
 
 inline void writeAsm(std :: string const &str)
 {
-    //std :: string strNew = "Line" + std :: to_string(asmline) + "-" + str;
-    //code.push_back(strNew);
     code.push_back(str);
     ++asmline;
 }

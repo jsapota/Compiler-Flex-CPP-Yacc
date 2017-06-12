@@ -1,40 +1,50 @@
-Kompilator - Jakub Sapota 2016/2017 JFTT
+Compiler - Jakub Sapota 2016/2017 JFTT
 
 
-Wymagania kompilatora:
+Requirements:
        	gcc 	5.4.0 
 	g++ 	5.4.0 
 	flex 	2.6.0
 	bison 	3.0.4
 	cln  	1.3.4-1
 
-Kompilator korzysta z:
+Compiler uses:
 	cln
 
-Język
-	Całość jest napisana w języku C++ w std11.
+Languages
+	Whole project is written in C++ STD11.
 
-Struktura
-	./include	pliki nagłowkowe
-	./obj		pusty folder na wygenerowane pliki pośrednie
-	./src		kody źródłowe .cpp, .l, .y
+Structure
+	./include	headers
+	./obj		generated files
+	./src		source files .cpp, .l, .y
 
-Pliki źródłowe
-	asm		funkcje pompujace oraz funkcja zapisująca kod asm
-	common		zbiór potrzebnych includów
-	variable	struktura do przechowywania zmiennych
-	main		funkcja związana z I/O
-	parser.l	implementacja lex'a
-	parser.y	implementacja bison'a
+Source Files
+	asm		asembler functions
+	common		all needed includes
+	variable	structure to contain all needed datas
+	main		functions connected to I/O
+	parser.l	lex implementation
+	parser.y	bison implementation
 
-Kompilacja
-	make 		kompilacja projektu
-	make clean     	usunięcie stworzonych plików
+Compile
+	make 		compile project
+	make clean     	remove generated files
 
-Uruchamianie
-	./compiler.out	nazwaInputu nazwaOutputu
+Usage
+	./compiler.out	inputName outputName
 
-	Przykładowo
-	input - "kod"
+	Example
+	input - "code"
 	output -"asm"
-	./compiler.out kod asm
+	./compiler.out code asm
+
+	Input Example
+	VAR
+	a b c
+	BEGIN
+	a := 5;
+	b := 10;
+	b := b + a;
+	WRITE a;
+	END
